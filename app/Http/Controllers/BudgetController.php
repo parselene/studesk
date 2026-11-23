@@ -18,27 +18,23 @@ public function index()
     $today = now()->toDateString();
 
     // Load actual spending plans belonging to this user.
+
     $budgets = $user->budgets()
         ->orderBy('start_date')
         ->get()
-        ->map(function ($budget) use ($user, $today) {
-            $transactions = $user->transactions()
+        ->map(function ($budget) use ($today) {
+
+            $transactions = $budget->transactions()
                 ->where('type', 'expense')
                 ->whereBetween('transaction_date', [
                     $budget->start_date->toDateString(),
                     $budget->end_date->toDateString(),
                 ])
-                ->when(
-                    $budget->category,
-                    fn ($query) => $query->where(
-                        'category',
-                        $budget->category
-                    )
-                )
                 ->orderByDesc('transaction_date')
                 ->orderByDesc('id')
                 ->get([
                     'id',
+                    'budget_id',
                     'description',
                     'category',
                     'amount',
@@ -50,16 +46,20 @@ public function index()
 
             $budget->spent = $spent;
             $budget->remaining = $limit - $spent;
+
             $budget->progress = $limit > 0
                 ? round(($spent / $limit) * 100, 1)
                 : 0;
 
             $budget->transactions = $transactions;
-            $budget->is_active = $budget->start_date->toDateString() <= $today
+
+            $budget->is_active =
+                $budget->start_date->toDateString() <= $today
                 && $budget->end_date->toDateString() >= $today;
 
             return $budget;
         });
+
 
     // Find categories that have expenses this month but no active plan.
     $monthStart = now()->startOfMonth()->toDateString();
@@ -67,6 +67,7 @@ public function index()
 
     $monthlyExpenses = $user->transactions()
         ->where('type', 'expense')
+        ->whereNull('budget_id')
         ->whereBetween('transaction_date', [$monthStart, $monthEnd])
         ->orderByDesc('transaction_date')
         ->orderByDesc('id')
@@ -77,14 +78,6 @@ public function index()
             'amount',
             'transaction_date',
         ]);
-
-    $activeCategories = $budgets
-        ->filter(fn ($budget) => $budget->is_active && $budget->category)
-        ->pluck('category')
-        ->map(fn ($category) => mb_strtolower(trim($category)))
-        ->unique()
-        ->values()
-        ->all();
 
     $unplannedCategories = $monthlyExpenses
         ->groupBy(fn ($transaction) =>

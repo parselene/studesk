@@ -1,12 +1,21 @@
 
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3'
+import { computed, watch } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
 defineOptions({ layout: AppLayout })
 
+const props = defineProps({
+    budgets: {
+        type: Array,
+        default: () => [],
+    },
+})
+
 const form = useForm({
     type: 'expense',
+    budget_id: '',
     category: '',
     description: '',
     amount: '',
@@ -34,6 +43,38 @@ const categories = {
         'Other',
     ],
 }
+
+const availableBudgets = computed(() => {
+    return props.budgets.filter(budget =>
+        budget.start_date <= form.transaction_date &&
+        budget.end_date >= form.transaction_date
+    )
+})
+
+const selectedBudget = computed(() => {
+    return props.budgets.find(
+        budget => String(budget.id) === String(form.budget_id)
+    )
+})
+
+watch(
+    () => form.transaction_date,
+    () => {
+        const selectedBudget = props.budgets.find(
+            budget => String(budget.id) === String(form.budget_id)
+        )
+
+        if (
+            selectedBudget &&
+            (
+                selectedBudget.start_date > form.transaction_date ||
+                selectedBudget.end_date < form.transaction_date
+            )
+        ) {
+            form.budget_id = ''
+        }
+    }
+)
 
 function submit() {
     form.post('/finance/transactions')
@@ -76,7 +117,7 @@ function submit() {
                 <div class="grid grid-cols-2 gap-3">
                     <button
                         type="button"
-                        @click="form.type = 'expense'; form.category = ''"
+                        @click="form.type = 'expense'; form.category = ''; form.budget_id = ''"a
                         :class="form.type === 'expense'
                             ? 'border-[#294B3C] bg-[#294B3C] text-white'
                             : 'border-[#E8E5DD] bg-white text-gray-600 hover:bg-[#F7F5F0]'"
@@ -87,7 +128,7 @@ function submit() {
 
                     <button
                         type="button"
-                        @click="form.type = 'income'; form.category = ''"
+                        @click="form.type = 'income'; form.category = ''; form.budget_id = ''"
                         :class="form.type === 'income'
                             ? 'border-[#54705D] bg-[#E7EBDD] text-[#294B3C]'
                             : 'border-[#E8E5DD] bg-white text-gray-600 hover:bg-[#F7F5F0]'"
@@ -161,10 +202,55 @@ function submit() {
 
             <!-- Category and payment method -->
             <div class="grid gap-5 sm:grid-cols-2">
-                <div>
-                    <label for="category" class="mb-2 block text-sm font-semibold text-[#294B3C]">
+                <!-- Budget selection -->
+                <div v-if="form.type === 'expense'">
+                    <label
+                        for="budget_id"
+                        class="mb-2 block text-sm font-semibold text-[#294B3C]"
+                    >
+                        Assign to budget
+                        <span class="font-normal text-gray-400">(optional)</span>
+                    </label>
+
+                    <select
+                        id="budget_id"
+                        v-model="form.budget_id"
+                        @change="form.category = ''"
+                        class="w-full rounded-xl border border-[#DEDCD4] bg-white px-4 py-3 text-sm outline-none focus:border-[#82977A] focus:ring-2 focus:ring-[#82977A]/20"
+                    >
+                        <option value="">No budget / Unplanned expense</option>
+
+                        <option
+                            v-for="budget in availableBudgets"
+                            :key="budget.id"
+                            :value="String(budget.id)"
+                        >
+                            {{ budget.name }} — {{ budget.category }}
+                        </option>
+                    </select>
+
+                    <p
+                        v-if="availableBudgets.length === 0"
+                        class="mt-2 text-xs text-amber-700"
+                    >
+                        You don't have an active budget covering this transaction date.
+                        You can still record this as an unplanned expense.
+                    </p>
+
+                    <p v-if="form.errors.budget_id" class="mt-2 text-sm text-red-600">
+                        {{ form.errors.budget_id }}
+                    </p>
+                </div>
+
+                <!-- Category -->
+                <div v-if="form.type === 'income' || !form.budget_id">
+                    <label
+                        for="category"
+                        class="mb-2 block text-sm font-semibold text-[#294B3C]"
+                    >
                         Category
                     </label>
+
                     <select
                         id="category"
                         v-model="form.category"
@@ -172,6 +258,7 @@ function submit() {
                         class="w-full rounded-xl border border-[#DEDCD4] bg-white px-4 py-3 text-sm outline-none focus:border-[#82977A] focus:ring-2 focus:ring-[#82977A]/20"
                     >
                         <option value="" disabled>Select a category</option>
+
                         <option
                             v-for="category in categories[form.type]"
                             :key="category"
@@ -180,8 +267,27 @@ function submit() {
                             {{ category }}
                         </option>
                     </select>
+
                     <p v-if="form.errors.category" class="mt-2 text-sm text-red-600">
                         {{ form.errors.category }}
+                    </p>
+                </div>
+
+                <!-- Automatically assigned category -->
+                <div
+                    v-else
+                    class="rounded-xl border border-[#E8E5DD] bg-[#F7F5F0] p-4"
+                >
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#758477]">
+                        Assigned category
+                    </p>
+
+                    <p class="mt-1 font-semibold text-[#294B3C]">
+                        {{ selectedBudget?.category || 'No category assigned' }}
+                    </p>
+
+                    <p class="mt-1 text-xs text-gray-500">
+                        This expense will automatically use the selected budget's category.
                     </p>
                 </div>
 
