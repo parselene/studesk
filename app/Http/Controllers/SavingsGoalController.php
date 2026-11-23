@@ -177,9 +177,10 @@ public function contribute(Request $request, string $id)
         ]);
     });
 
-    return redirect()
-        ->route('finance.savings-goals.show', $goal->id)
-        ->with('success', 'Savings allocation added successfully.');
+    return back()->with(
+        'success',
+        'Savings allocation added successfully.'
+    );
 }
 
 

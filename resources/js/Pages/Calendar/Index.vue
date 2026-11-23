@@ -1,13 +1,27 @@
-
 <script setup>
 import { computed, ref } from 'vue'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
+import {
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    Plus,
+    Search,
+    X,
+    ArrowUpRight,
+    Pencil,
+    Trash2,
+    BookOpen,
+    Wallet,
+    Sparkles,
+} from 'lucide-vue-next'
+
 defineOptions({
     layout: AppLayout,
 })
-
 
 const props = defineProps({
     events: {
@@ -31,7 +45,6 @@ const props = defineProps({
         default: () => [],
     },
 })
-
 
 const today = new Date()
 const currentMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -139,7 +152,6 @@ const calendarDays = computed(() => {
     })
 })
 
-
 const weekdayNames = [
     'Sunday',
     'Monday',
@@ -171,7 +183,7 @@ function dayMatchesClass(dayValue, date) {
 const allCalendarItems = computed(() => {
     const items = []
 
-    // Manually created calendar events
+    // Manually created calendar events.
     props.events.forEach(event => {
         items.push({
             ...event,
@@ -184,7 +196,7 @@ const allCalendarItems = computed(() => {
         })
     })
 
-    // Tasks with due dates
+    // Tasks with due dates.
     props.tasks.forEach(task => {
         items.push({
             id: `task-${task.id}`,
@@ -202,7 +214,7 @@ const allCalendarItems = computed(() => {
         })
     })
 
-    // Bills with due dates
+    // Bills with due dates.
     props.bills.forEach(bill => {
         items.push({
             id: `bill-${bill.id}`,
@@ -222,7 +234,7 @@ const allCalendarItems = computed(() => {
         })
     })
 
-    // Savings goals with target dates
+    // Savings goals with target dates.
     props.savingsGoals.forEach(goal => {
         const progress = Number(goal.target_amount) > 0
             ? Math.min(
@@ -249,7 +261,7 @@ const allCalendarItems = computed(() => {
         })
     })
 
-    // Generate class occurrences for the displayed calendar grid
+    // Generate class occurrences for the displayed calendar grid.
     const year = currentMonth.value.getFullYear()
     const month = currentMonth.value.getMonth()
     const firstOfMonth = new Date(year, month, 1)
@@ -350,7 +362,6 @@ const monthEventCount = computed(() => {
     }).length
 })
 
-
 function changeMonth(amount) {
     currentMonth.value = new Date(
         currentMonth.value.getFullYear(),
@@ -382,6 +393,9 @@ function openCreateModal(dateKey = selectedDate.value) {
 }
 
 function openEditModal(event) {
+    // Only manually created calendar events can be edited here.
+    if (event.source !== 'event') return
+
     resetForm()
 
     form.eventId = event.sourceId
@@ -427,13 +441,15 @@ function saveEvent() {
 }
 
 function deleteEvent(event) {
+    // Only manually created calendar events can be deleted here.
+    if (event.source !== 'event') return
+
     if (!confirm(`Delete "${event.title}" from your calendar?`)) return
 
     router.delete(`/calendar-events/${event.sourceId}`, {
         preserveScroll: true,
     })
 }
-
 
 function eventClass(type) {
     const classes = {
@@ -449,102 +465,195 @@ function eventClass(type) {
     return classes[type] || 'personal'
 }
 
+function eventToneClass(type) {
+    const classes = {
+        academic: 'bg-[#E7EBDD] text-[#42654B]',
+        class: 'bg-[#E7EBDD] text-[#42654B]',
+        task: 'bg-[#E7EBDD] text-[#42654B]',
+        financial: 'bg-[#F5E4DD] text-[#A85F4C]',
+        bill: 'bg-[#F5E4DD] text-[#A85F4C]',
+        goal: 'bg-[#EBE5F3] text-[#796894]',
+        personal: 'bg-[#EBE5F3] text-[#796894]',
+    }
+
+    return classes[type] || classes.personal
+}
 </script>
 
 <template>
     <Head title="Calendar | StuDesk" />
 
-    <div class="page">
-        <header class="page-header">
+    <main class="min-w-0 space-y-7 pb-8">
+        <!-- Page heading -->
+        <header class="flex flex-wrap items-end justify-between gap-4">
             <div>
-                <p class="eyebrow">YOUR LIFE, IN ONE VIEW</p>
-                <h1>Your calendar<span class="title-period">.</span></h1>
-                <p class="subtitle">
+                <p class="text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                    YOUR LIFE, IN ONE VIEW
+                </p>
+
+                <h1 class="mt-2 font-heading text-3xl font-normal tracking-tight text-[#293B32] sm:text-4xl">
+                    Your calendar<span class="text-[#B76C54]">.</span>
+                </h1>
+
+                <p class="mt-2 text-sm leading-6 text-[#777D73]">
                     Make room for deadlines, plans, and everything in between.
                 </p>
             </div>
+
+            <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl bg-[#294B3C] px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-[#203C30]"
+                @click="openCreateModal()"
+            >
+                <Plus :size="17" />
+                Add an event
+            </button>
         </header>
 
-        <section class="welcome-strip">
-            <div>
-                <span class="strip-label">KEEP YOUR PLANS CLOSE</span>
-                <h2>One calendar. Less to juggle.</h2>
-                <p>Bring your academic, financial, and personal plans together.</p>
-            </div>
+        <!-- Welcome banner -->
+        <section class="relative overflow-hidden rounded-[24px] border border-[#DCE5D8] bg-[#E7EBDD] px-6 py-7 sm:px-8 sm:py-8">
+            <div class="pointer-events-none absolute -right-8 -top-16 h-52 w-52 rounded-full border-[28px] border-white/30"></div>
+            <div class="pointer-events-none absolute right-32 top-24 h-16 w-16 rounded-full bg-[#D1DCC8]/60"></div>
 
-            <div class="strip-decoration" aria-hidden="true">
-                <span class="decoration-circle circle-one"></span>
-                <span class="decoration-circle circle-two"></span>
-                <span class="decoration-star">✳</span>
+            <div class="relative flex items-center justify-between gap-5">
+                <div class="max-w-xl">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#496550]">
+                        <Sparkles :size="13" />
+                        Keep your plans close
+                    </span>
+
+                    <h2 class="mt-4 font-heading text-2xl font-normal tracking-tight text-[#294B3C] sm:text-3xl">
+                        One calendar. Less to juggle.
+                    </h2>
+
+                    <p class="mt-2 max-w-lg text-sm leading-6 text-[#637361]">
+                        Bring your academic, financial, and personal plans together.
+                        See what's coming and make time for what matters.
+                    </p>
+                </div>
+
+                <div class="relative mr-5 hidden h-24 w-28 shrink-0 items-center justify-center sm:flex">
+                    <div class="absolute h-20 w-20 rounded-full bg-[#D1DCC8]"></div>
+                    <div class="absolute right-0 top-0 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#B8CBB7] bg-[#F7F5F0] text-[#294B3C] shadow-sm">
+                        <CalendarDays :size="24" :stroke-width="1.6" />
+                    </div>
+                    <BookOpen :size="27" class="relative mt-5 mr-5 text-[#54705D]" :stroke-width="1.6" />
+                </div>
             </div>
         </section>
 
-        <section class="calendar-layout">
-            <div class="calendar-panel">
-                <div class="calendar-toolbar">
+        <!-- Calendar and side panels -->
+        <section class="grid grid-cols-1 items-start gap-5 2xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.85fr)]">
+            <!-- Main calendar -->
+            <div class="min-w-0 rounded-2xl border border-[#E8E5DD] bg-white p-4 shadow-[0_2px_12px_rgba(41,75,60,0.04)] sm:p-6">
+                <!-- Calendar toolbar -->
+                <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <p class="eyebrow">YOUR SCHEDULE</p>
-                        <h2>{{ monthLabel }}</h2>
-                        <p class="month-caption">
+                        <p class="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                            YOUR SCHEDULE
+                        </p>
+
+                        <h2 class="mt-1 font-heading text-2xl font-normal text-[#294B3C]">
+                            {{ monthLabel }}
+                        </h2>
+
+                        <p class="mt-1 text-xs text-[#85877D]">
                             {{ monthEventCount }}
-                            {{ monthEventCount === 1 ? 'event' : 'events' }} this month
+                            {{ monthEventCount === 1 ? 'item' : 'items' }} this month
                         </p>
                     </div>
 
-                    <div class="month-actions">
-                        <button class="today-button" type="button" @click="goToToday">
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            class="rounded-xl border border-[#E8E5DD] bg-[#F7F5F0] px-3.5 py-2.5 text-xs font-semibold text-[#42654B] transition hover:bg-[#E7EBDD]"
+                            @click="goToToday"
+                        >
                             Today
                         </button>
+
                         <button
-                            class="arrow-button"
                             type="button"
                             aria-label="Previous month"
+                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E5DD] bg-white text-[#54705D] transition hover:bg-[#E7EBDD]"
                             @click="changeMonth(-1)"
-                        >‹</button>
+                        >
+                            <ChevronLeft :size="18" />
+                        </button>
+
                         <button
-                            class="arrow-button"
                             type="button"
                             aria-label="Next month"
+                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E5DD] bg-white text-[#54705D] transition hover:bg-[#E7EBDD]"
                             @click="changeMonth(1)"
-                        >›</button>
+                        >
+                            <ChevronRight :size="18" />
+                        </button>
                     </div>
                 </div>
 
-                <div class="calendar-grid">
+                <!-- Search -->
+                <div class="mb-5">
+                    <div class="relative">
+                        <Search
+                            :size="16"
+                            class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#92968E]"
+                        />
+                        <input
+                            v-model="searchQuery"
+                            type="search"
+                            placeholder="Search events, tasks, subjects, or payments..."
+                            class="w-full rounded-xl border border-[#E8E5DD] bg-[#FAF9F6] py-3 pl-10 pr-4 text-xs text-[#293B32] outline-none transition placeholder:text-[#A0A197] focus:border-[#91A68E] focus:ring-4 focus:ring-[#E7EBDD]/70"
+                        />
+                    </div>
+                </div>
+
+                <!-- Calendar grid -->
+                <div class="grid grid-cols-7">
                     <div
                         v-for="day in weekdays"
                         :key="day"
-                        class="weekday"
+                        class="pb-3 text-center text-[10px] font-semibold uppercase tracking-wide text-[#92968E]"
                     >
                         {{ day }}
                     </div>
 
-                    <button
+                    <div
                         v-for="day in calendarDays"
                         :key="day.key"
-                        type="button"
-                        class="day-cell"
-                        :class="{
-                            'outside-month': !day.inMonth,
-                            'today-cell': day.isToday,
-                            'selected-cell': selectedDate === day.key,
-                        }"
+                        role="button"
+                        tabindex="0"
                         :aria-label="`${day.key}, ${eventsForDay(day.key).length} events`"
+                        class="group min-w-0 min-h-[82px] cursor-pointer border-t border-r border-[#EEECE5] px-1.5 py-2 text-left transition last:border-r-0 hover:bg-[#FAFAF6] sm:min-h-[108px] sm:px-2"
+                        :class="[
+                            (calendarDays.indexOf(day) + 1) % 7 === 0 ? 'border-r-0' : '',
+                            selectedDate === day.key ? 'bg-[#F0F3EC] shadow-[inset_0_0_0_1px_#C9D8C6]' : '',
+                            !day.inMonth ? 'bg-[#FBFAF8]/70' : '',
+                        ]"
                         @click="selectedDate = day.key"
                         @dblclick="openCreateModal(day.key)"
+                        @keydown.enter.prevent="selectedDate = day.key"
+                        @keydown.space.prevent="selectedDate = day.key"
                     >
-                        <span class="day-number" :class="{ 'today-number': day.isToday }">
+                        <span
+                            class="mb-1.5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-medium"
+                            :class="{
+                                'bg-[#294B3C] font-semibold text-white': day.isToday,
+                                'text-[#C1C1B8]': !day.inMonth && !day.isToday,
+                                'text-[#46564A]': day.inMonth && !day.isToday,
+                            }"
+                        >
                             {{ day.day }}
                         </span>
 
-                        <div class="day-events">
+                        <div class="grid gap-1">
                             <button
                                 v-for="event in eventsForDay(day.key).slice(0, 2)"
                                 :key="event.id"
                                 type="button"
-                                class="day-event"
-                                :class="eventClass(event.event_type)"
-                                :title="event.source === 'event' ? 'Click to edit event' : event.title"
+                                class="block w-full truncate rounded-md px-1.5 py-1 text-left text-[9px] font-medium leading-tight transition hover:brightness-[0.97] sm:text-[10px]"
+                                :class="eventToneClass(event.event_type)"
+                                :title="event.title"
                                 @click.stop="
                                     event.source === 'event'
                                         ? openEditModal(event)
@@ -556,1096 +665,407 @@ function eventClass(type) {
 
                             <span
                                 v-if="eventsForDay(day.key).length > 2"
-                                class="more-events"
+                                class="pl-1 text-[9px] font-medium text-[#85877D]"
                             >
                                 +{{ eventsForDay(day.key).length - 2 }} more
                             </span>
                         </div>
-                    </button>
+                    </div>
                 </div>
 
-                <div class="calendar-footer">
-                    <span><i class="legend-dot academic-dot"></i> Academic</span>
-                    <span><i class="legend-dot financial-dot"></i> Financial</span>
-                    <span><i class="legend-dot personal-dot"></i> Personal</span>
+                <!-- Calendar legend -->
+                <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#EEECE5] pt-4">
+                    <span class="inline-flex items-center gap-2 text-[10px] text-[#747B71]">
+                        <span class="h-2 w-2 rounded-full bg-[#668765]"></span>
+                        Academic
+                    </span>
+                    <span class="inline-flex items-center gap-2 text-[10px] text-[#747B71]">
+                        <span class="h-2 w-2 rounded-full bg-[#BD8065]"></span>
+                        Financial
+                    </span>
+                    <span class="inline-flex items-center gap-2 text-[10px] text-[#747B71]">
+                        <span class="h-2 w-2 rounded-full bg-[#9A83B3]"></span>
+                        Personal & savings
+                    </span>
                 </div>
             </div>
 
-            <aside class="side-column">
-                <section class="side-panel selected-day-panel">
-                    <div class="side-heading">
-                        <div>
-                            <p class="eyebrow">YOUR DAY</p>
-                            <h2>{{ formatLongDate(selectedDate) }}</h2>
+            <!-- Right side panels -->
+            <aside class="grid min-w-0 gap-5">
+                <!-- Selected day -->
+                <section class="rounded-2xl border border-[#E8E5DD] bg-white p-5 shadow-[0_2px_12px_rgba(41,75,60,0.04)] sm:p-6">
+                    <div class="mb-5 flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                                YOUR DAY
+                            </p>
+                            <h2 class="mt-1 font-heading text-xl font-normal leading-snug text-[#294B3C]">
+                                {{ formatLongDate(selectedDate) }}
+                            </h2>
+                            <p class="mt-1 text-xs text-[#85877D]">
+                                {{ selectedEvents.length }}
+                                {{ selectedEvents.length === 1 ? 'item planned' : 'items planned' }}
+                            </p>
                         </div>
 
                         <button
                             type="button"
-                            class="add-icon-button"
                             aria-label="Add event on selected date"
+                            title="Add event"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#294B3C] text-white transition hover:bg-[#203C30]"
                             @click="openCreateModal()"
-                        >＋</button>
+                        >
+                            <Plus :size="19" />
+                        </button>
                     </div>
 
-                    <div v-if="selectedEvents.length" class="event-list">
+                    <div v-if="selectedEvents.length" class="space-y-4">
                         <article
                             v-for="event in selectedEvents"
                             :key="event.id"
-                            class="event-item"
+                            class="flex gap-3"
                         >
-                            <span class="event-line" :class="eventClass(event.event_type)"></span>
+                            <span
+                                class="mt-1 w-[3px] shrink-0 self-stretch rounded-full"
+                                :class="{
+                                    'bg-[#668765]': ['academic', 'class', 'task'].includes(event.event_type),
+                                    'bg-[#BD8065]': ['financial', 'bill'].includes(event.event_type),
+                                    'bg-[#9A83B3]': ['personal', 'goal'].includes(event.event_type),
+                                }"
+                            ></span>
 
-                            <div class="event-content">
-                                <span class="event-category" :class="eventClass(event.event_type)">
+                            <div class="min-w-0 flex-1 pb-1">
+                                <span
+                                    class="inline-flex rounded-md px-2 py-1 text-[9px] font-semibold capitalize"
+                                    :class="eventToneClass(event.event_type)"
+                                >
                                     {{ event.event_type }}
                                 </span>
-                                <h3>{{ event.title }}</h3>
-                                <p class="event-time">
+
+                                <h3 class="mt-2 break-words text-sm font-semibold text-[#354638]">
+                                    {{ event.title }}
+                                </h3>
+
+                                <p class="mt-1 flex items-center gap-1.5 text-[11px] text-[#85877D]">
+                                    <Clock :size="12" />
                                     {{ formatTime(event.starts_at) }}
                                     <template v-if="event.ends_at">
                                         – {{ formatTime(event.ends_at) }}
                                     </template>
                                 </p>
-                                <p v-if="event.description" class="event-description">
+
+                                <p
+                                    v-if="event.description"
+                                    class="mt-2 whitespace-pre-line break-words text-xs leading-5 text-[#85877D]"
+                                >
                                     {{ event.description }}
                                 </p>
 
-                                <div class="event-actions">
-                                    <button type="button" @click="openEditModal(event)">
-                                        Edit
-                                    </button>
+                                <div
+                                    v-if="event.source === 'event'"
+                                    class="mt-3 flex items-center gap-3"
+                                >
                                     <button
                                         type="button"
-                                        class="delete-action"
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#42654B] transition hover:text-[#203C30]"
+                                        @click="openEditModal(event)"
+                                    >
+                                        <Pencil :size="12" />
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B76C54] transition hover:text-[#92513E]"
                                         @click="deleteEvent(event)"
                                     >
+                                        <Trash2 :size="12" />
                                         Delete
                                     </button>
                                 </div>
+
+                                <a
+                                    v-else-if="event.link"
+                                    :href="event.link"
+                                    class="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[#42654B] hover:underline"
+                                >
+                                    View details
+                                    <ArrowUpRight :size="12" />
+                                </a>
                             </div>
                         </article>
                     </div>
 
-                    <div v-else class="mini-empty">
-                        <div class="mini-empty-icon">✳</div>
-                        <h3>A little room in your day</h3>
-                        <p>No events planned for this date yet.</p>
-                        <button type="button" class="inline-add" @click="openCreateModal()">
-                            + Add an event
+                    <div
+                        v-else
+                        class="rounded-2xl bg-[#F7F5F0] px-5 py-8 text-center"
+                    >
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E7EBDD] text-[#54705D]">
+                            <CalendarDays :size="22" :stroke-width="1.7" />
+                        </div>
+
+                        <h3 class="mt-4 font-heading text-lg font-normal text-[#294B3C]">
+                            A little room in your day
+                        </h3>
+
+                        <p class="mt-1 text-xs leading-5 text-[#85877D]">
+                            No events planned for this date yet.
+                        </p>
+
+                        <button
+                            type="button"
+                            class="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-[#DCE5D8] bg-white px-3.5 py-2.5 text-xs font-semibold text-[#42654B] transition hover:bg-[#E7EBDD]"
+                            @click="openCreateModal()"
+                        >
+                            <Plus :size="14" />
+                            Add an event
                         </button>
                     </div>
                 </section>
 
-                <section class="side-panel upcoming-panel">
-                    <div class="side-heading">
+                <!-- Upcoming events -->
+                <section class="rounded-2xl border border-[#E8E5DD] bg-white p-5 shadow-[0_2px_12px_rgba(41,75,60,0.04)] sm:p-6">
+                    <div class="mb-4 flex items-start justify-between gap-3">
                         <div>
-                            <p class="eyebrow">COMING UP</p>
-                            <h2>On the horizon</h2>
+                            <p class="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                                COMING UP
+                            </p>
+                            <h2 class="mt-1 font-heading text-xl font-normal text-[#294B3C]">
+                                On the horizon
+                            </h2>
+                            <p class="mt-1 text-xs text-[#85877D]">
+                                Your next five upcoming items.
+                            </p>
                         </div>
-                        <span class="upcoming-symbol">↗</span>
+
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E7EBDD] text-[#54705D]">
+                            <ArrowUpRight :size="18" />
+                        </span>
                     </div>
 
-                    <div v-if="upcomingEvents.length" class="upcoming-list">
+                    <div v-if="upcomingEvents.length" class="space-y-1">
                         <button
                             v-for="event in upcomingEvents"
                             :key="event.id"
                             type="button"
-                            class="upcoming-item"
+                            class="group flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-[#F7F5F0]"
                             @click="selectedDate = dateKeyForEvent(event)"
                         >
-                            <span class="upcoming-date">
-                                <strong>{{ parseDate(event.starts_at)?.getDate() }}</strong>
-                                <small>
+                            <span class="flex w-11 shrink-0 flex-col items-center rounded-xl bg-[#F0EEE7] py-2">
+                                <strong class="font-heading text-lg font-normal leading-none text-[#294B3C]">
+                                    {{ parseDate(event.starts_at)?.getDate() }}
+                                </strong>
+                                <small class="mt-1 text-[9px] font-semibold uppercase text-[#85877D]">
                                     {{ parseDate(event.starts_at)?.toLocaleDateString('en-US', { month: 'short' }) }}
                                 </small>
                             </span>
 
-                            <span class="upcoming-info">
-                                <strong>{{ event.title }}</strong>
-                                <small>{{ formatTime(event.starts_at) }}</small>
+                            <span class="min-w-0 flex-1">
+                                <strong class="block truncate text-xs font-semibold text-[#354638]">
+                                    {{ event.title }}
+                                </strong>
+                                <small class="mt-1 block text-[10px] text-[#85877D]">
+                                    {{ formatTime(event.starts_at) }}
+                                </small>
                             </span>
 
-                            <span class="upcoming-dot" :class="eventClass(event.event_type)"></span>
+                            <span
+                                class="h-2 w-2 shrink-0 rounded-full"
+                                :class="{
+                                    'bg-[#668765]': ['academic', 'class', 'task'].includes(event.event_type),
+                                    'bg-[#BD8065]': ['financial', 'bill'].includes(event.event_type),
+                                    'bg-[#9A83B3]': ['personal', 'goal'].includes(event.event_type),
+                                }"
+                            ></span>
                         </button>
                     </div>
 
-                    <div v-else class="upcoming-empty">
+                    <div
+                        v-else
+                        class="rounded-xl bg-[#F7F5F0] px-4 py-5 text-center text-xs leading-5 text-[#85877D]"
+                    >
                         Your upcoming plans will appear here.
                     </div>
+                </section>
+
+                <!-- Calendar reminder -->
+                <section class="rounded-2xl bg-[#F5EDE5] p-5">
+                    <div class="flex items-center gap-2">
+                        <Wallet :size="17" class="text-[#A56850]" />
+                        <h3 class="text-sm font-semibold text-[#684B3D]">
+                            Keep everything connected
+                        </h3>
+                    </div>
+
+                    <p class="mt-2 text-xs leading-5 text-[#806D61]">
+                        Your calendar brings school deadlines, bills, and savings
+                        targets into one place, helping you prepare before they arrive.
+                    </p>
                 </section>
             </aside>
         </section>
 
-        <div v-if="showModal" class="modal-backdrop" @click.self="closeModal" @keydown.esc="closeModal">
-            <section
-                class="event-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="event-modal-title"
+        <!-- Create / edit event modal -->
+        <Teleport to="body">
+            <div
+                v-if="showModal"
+                class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#1F2A22]/50 p-4 backdrop-blur-[3px]"
+                @click.self="closeModal"
+                @keydown.esc="closeModal"
             >
-                <div class="modal-heading">
-                    <div>
-                        <p class="eyebrow">{{ form.eventId ? 'MAKE AN UPDATE' : 'MAKE A PLAN' }}</p>
-                        <h2 id="event-modal-title">
-                            {{ form.eventId ? 'Edit event' : 'Add to your calendar' }}
-                        </h2>
-                        <p class="modal-subtitle">
-                            Give this part of your day a place.
-                        </p>
-                    </div>
+                <section
+                    class="my-auto w-full max-w-[540px] overflow-hidden rounded-[22px] border border-[#E8E5DD] bg-white shadow-[0_22px_70px_rgba(22,35,26,0.18)]"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="event-modal-title"
+                >
+                    <!-- Modal header -->
+                    <div class="flex items-start justify-between gap-4 border-b border-[#EEECE5] px-6 py-5 sm:px-7">
+                        <div>
+                            <p class="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                                {{ form.eventId ? 'MAKE AN UPDATE' : 'MAKE A PLAN' }}
+                            </p>
 
-                    <button
-                        type="button"
-                        class="close-button"
-                        aria-label="Close dialog"
-                        @click="closeModal"
-                    >×</button>
-                </div>
+                            <h2 id="event-modal-title" class="mt-1 font-heading text-2xl font-normal text-[#294B3C]">
+                                {{ form.eventId ? 'Edit event' : 'Add to your calendar' }}
+                            </h2>
 
-                <form @submit.prevent="saveEvent">
-                    <label class="form-label">
-                        Event title <span class="required">*</span>
-                        <input
-                            v-model="form.title"
-                            type="text"
-                            placeholder="e.g. Database Systems midterm"
-                            maxlength="255"
-                            required
-                        />
-                        <small v-if="form.errors.title" class="error">
-                            {{ form.errors.title }}
-                        </small>
-                    </label>
+                            <p class="mt-1 text-xs leading-5 text-[#85877D]">
+                                Give this part of your day a place.
+                            </p>
+                        </div>
 
-                    <label class="form-label">
-                        Category
-                        <select v-model="form.event_type" required>
-                            <option value="academic">Academic</option>
-                            <option value="financial">Financial</option>
-                            <option value="personal">Personal</option>
-                        </select>
-                        <small v-if="form.errors.event_type" class="error">
-                            {{ form.errors.event_type }}
-                        </small>
-                    </label>
-
-                    <label class="form-label">
-                        Description
-                        <textarea
-                            v-model="form.description"
-                            rows="3"
-                            placeholder="Add a note or anything you'll want to remember..."
-                        ></textarea>
-                        <small v-if="form.errors.description" class="error">
-                            {{ form.errors.description }}
-                        </small>
-                    </label>
-
-                    <div class="form-two-columns">
-                        <label class="form-label">
-                            Starts <span class="required">*</span>
-                            <input v-model="form.starts_at" type="datetime-local" required />
-                            <small v-if="form.errors.starts_at" class="error">
-                                {{ form.errors.starts_at }}
-                            </small>
-                        </label>
-
-                        <label class="form-label">
-                            Ends
-                            <input v-model="form.ends_at" type="datetime-local" />
-                            <small v-if="form.errors.ends_at" class="error">
-                                {{ form.errors.ends_at }}
-                            </small>
-                        </label>
-                    </div>
-
-                    <div class="modal-actions">
                         <button
                             type="button"
-                            class="cancel-button"
+                            aria-label="Close dialog"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0EEE7] text-[#54705D] transition hover:bg-[#E7EBDD]"
                             :disabled="form.processing"
                             @click="closeModal"
                         >
-                            Cancel
-                        </button>
-
-                        <button
-                            type="submit"
-                            class="save-button"
-                            :disabled="form.processing"
-                        >
-                            {{
-                                form.processing
-                                    ? 'Saving…'
-                                    : form.eventId
-                                        ? 'Save changes'
-                                        : 'Add event'
-                            }}
+                            <X :size="18" />
                         </button>
                     </div>
-                </form>
-            </section>
-        </div>
-    </div>
+
+                    <!-- Modal form -->
+                    <form class="px-6 py-6 sm:px-7" @submit.prevent="saveEvent">
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-xs font-semibold text-[#435348]">
+                                    Event title <span class="text-[#B76C54]">*</span>
+                                </span>
+
+                                <input
+                                    v-model="form.title"
+                                    type="text"
+                                    placeholder="e.g. Database Systems midterm"
+                                    maxlength="255"
+                                    required
+                                    class="mt-2 w-full rounded-xl border border-[#E8E5DD] bg-[#FAF9F6] px-3.5 py-3 text-sm text-[#293B32] outline-none transition placeholder:text-[#A0A197] focus:border-[#91A68E] focus:bg-white focus:ring-4 focus:ring-[#E7EBDD]/70"
+                                />
+
+                                <small v-if="form.errors.title" class="mt-1.5 block text-xs text-[#B76C54]">
+                                    {{ form.errors.title }}
+                                </small>
+                            </label>
+
+                            <label class="block">
+                                <span class="text-xs font-semibold text-[#435348]">
+                                    Category
+                                </span>
+
+                                <select
+                                    v-model="form.event_type"
+                                    required
+                                    class="mt-2 w-full rounded-xl border border-[#E8E5DD] bg-[#FAF9F6] px-3.5 py-3 text-sm text-[#293B32] outline-none transition focus:border-[#91A68E] focus:bg-white focus:ring-4 focus:ring-[#E7EBDD]/70"
+                                >
+                                    <option value="academic">Academic</option>
+                                    <option value="financial">Financial</option>
+                                    <option value="personal">Personal</option>
+                                </select>
+
+                                <small v-if="form.errors.event_type" class="mt-1.5 block text-xs text-[#B76C54]">
+                                    {{ form.errors.event_type }}
+                                </small>
+                            </label>
+
+                            <label class="block">
+                                <span class="text-xs font-semibold text-[#435348]">
+                                    Description
+                                </span>
+
+                                <textarea
+                                    v-model="form.description"
+                                    rows="3"
+                                    placeholder="Add a note or anything you'll want to remember..."
+                                    class="mt-2 w-full resize-y rounded-xl border border-[#E8E5DD] bg-[#FAF9F6] px-3.5 py-3 text-sm leading-6 text-[#293B32] outline-none transition placeholder:text-[#A0A197] focus:border-[#91A68E] focus:bg-white focus:ring-4 focus:ring-[#E7EBDD]/70"
+                                ></textarea>
+
+                                <small v-if="form.errors.description" class="mt-1.5 block text-xs text-[#B76C54]">
+                                    {{ form.errors.description }}
+                                </small>
+                            </label>
+
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-[#435348]">
+                                        Starts <span class="text-[#B76C54]">*</span>
+                                    </span>
+
+                                    <input
+                                        v-model="form.starts_at"
+                                        type="datetime-local"
+                                        required
+                                        class="mt-2 w-full min-w-0 rounded-xl border border-[#E8E5DD] bg-[#FAF9F6] px-3 py-3 text-xs text-[#293B32] outline-none transition focus:border-[#91A68E] focus:bg-white focus:ring-4 focus:ring-[#E7EBDD]/70"
+                                    />
+
+                                    <small v-if="form.errors.starts_at" class="mt-1.5 block text-xs text-[#B76C54]">
+                                        {{ form.errors.starts_at }}
+                                    </small>
+                                </label>
+
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-[#435348]">
+                                        Ends
+                                    </span>
+
+                                    <input
+                                        v-model="form.ends_at"
+                                        type="datetime-local"
+                                        class="mt-2 w-full min-w-0 rounded-xl border border-[#E8E5DD] bg-[#FAF9F6] px-3 py-3 text-xs text-[#293B32] outline-none transition focus:border-[#91A68E] focus:bg-white focus:ring-4 focus:ring-[#E7EBDD]/70"
+                                    />
+
+                                    <small v-if="form.errors.ends_at" class="mt-1.5 block text-xs text-[#B76C54]">
+                                        {{ form.errors.ends_at }}
+                                    </small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Modal actions -->
+                        <div class="mt-7 flex flex-wrap justify-end gap-2 border-t border-[#EEECE5] pt-5">
+                            <button
+                                type="button"
+                                class="rounded-xl border border-[#E8E5DD] bg-white px-4 py-2.5 text-xs font-semibold text-[#54705D] transition hover:bg-[#F7F5F0]"
+                                :disabled="form.processing"
+                                @click="closeModal"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#294B3C] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#203C30] disabled:cursor-not-allowed disabled:opacity-60"
+                                :disabled="form.processing"
+                            >
+                                <span v-if="form.processing">Saving...</span>
+                                <span v-else>
+                                    {{ form.eventId ? 'Save changes' : 'Add event' }}
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </Teleport>
+    </main>
 </template>
-
-<style scoped>
-.page {
-    min-height: 100vh;
-    padding: 36px 24px 48px;
-    background: #f7f5f0;
-    color: #273a30;
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-}
-
-.page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 26px;
-}
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #788679;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1.7px;
-    text-transform: uppercase;
-}
-
-h1 {
-    margin: 0;
-    font-family: Georgia, serif;
-    font-size: clamp(32px, 4vw, 43px);
-    font-weight: 500;
-    letter-spacing: -1.2px;
-}
-
-.title-period {
-    color: #b77a63;
-}
-
-.subtitle {
-    margin: 10px 0 0;
-    color: #7b8179;
-    font-size: 14px;
-    line-height: 1.6;
-}
-
-.welcome-strip {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 142px;
-    padding: 26px 30px;
-    margin-bottom: 24px;
-    overflow: hidden;
-    border: 1px solid #e0e7dc;
-    border-radius: 19px;
-    background: #e8eee4;
-}
-
-.strip-label {
-    color: #687b6b;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.6px;
-}
-
-.welcome-strip h2 {
-    margin: 9px 0 7px;
-    font-family: Georgia, serif;
-    font-size: clamp(21px, 3vw, 28px);
-    font-weight: 500;
-}
-
-.welcome-strip p {
-    margin: 0;
-    color: #738075;
-    font-size: 12px;
-    line-height: 1.6;
-}
-
-.strip-decoration {
-    position: relative;
-    width: 125px;
-    height: 95px;
-    flex-shrink: 0;
-}
-
-.decoration-circle {
-    position: absolute;
-    display: block;
-    border-radius: 50%;
-}
-
-.circle-one {
-    top: 4px;
-    right: 13px;
-    width: 78px;
-    height: 78px;
-    background: #d4e0d0;
-}
-
-.circle-two {
-    right: 0;
-    bottom: 0;
-    width: 45px;
-    height: 45px;
-    border: 1px solid #b8cbb7;
-    background: #e8eee4;
-}
-
-.decoration-star {
-    position: absolute;
-    top: 20px;
-    right: 36px;
-    color: #294b3c;
-    font-size: 29px;
-}
-
-.calendar-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.7fr) minmax(285px, 0.85fr);
-    align-items: start;
-    gap: 22px;
-}
-
-.calendar-panel,
-.side-panel {
-    min-width: 0;
-    border: 1px solid #e9e5dc;
-    border-radius: 18px;
-    background: #fffefa;
-    box-shadow: 0 2px 10px rgb(39 58 48 / 3%);
-}
-
-.calendar-panel {
-    padding: 24px;
-}
-
-.calendar-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.calendar-toolbar h2,
-.side-heading h2 {
-    margin: 0;
-    font-family: Georgia, serif;
-    font-size: 23px;
-    font-weight: 500;
-    overflow-wrap: anywhere;
-}
-
-.month-caption {
-    margin: 7px 0 0;
-    color: #83877e;
-    font-size: 11px;
-}
-
-.month-actions {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.today-button,
-.arrow-button {
-    height: 35px;
-    border: 1px solid #e5e3da;
-    border-radius: 9px;
-    background: #fffefa;
-    color: #405447;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 180ms ease, transform 180ms ease;
-}
-
-.today-button {
-    padding: 0 12px;
-}
-
-.arrow-button {
-    width: 35px;
-    font-size: 23px;
-    line-height: 1;
-}
-
-.today-button:hover,
-.arrow-button:hover {
-    background: #e8eee4;
-    transform: translateY(-1px);
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-
-.weekday {
-    padding: 0 0 13px;
-    color: #8b8c83;
-    font-size: 10px;
-    font-weight: 800;
-    text-align: center;
-}
-
-.day-cell {
-    min-width: 0;
-    min-height: 94px;
-    padding: 8px 5px;
-    border: 0;
-    border-top: 1px solid #eeece5;
-    border-right: 1px solid #eeece5;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-    transition: background 180ms ease, box-shadow 180ms ease;
-}
-
-.day-cell:nth-child(7n) {
-    border-right: 0;
-}
-
-.day-cell:hover {
-    background: #f6f6f0;
-}
-
-.day-cell.selected-cell {
-    background: #edf2e9;
-    box-shadow: inset 0 0 0 1px #c9d8c6;
-}
-
-.day-number {
-    display: grid;
-    width: 25px;
-    height: 25px;
-    margin: 0 auto 6px 0;
-    place-items: center;
-    border-radius: 50%;
-    color: #46564a;
-    font-size: 11px;
-}
-
-.today-number {
-    background: #294b3c;
-    color: white;
-    font-weight: 800;
-}
-
-.outside-month .day-number {
-    color: #c1c1b8;
-}
-
-.day-events {
-    display: grid;
-    gap: 3px;
-}
-
-.day-event {
-    display: block;
-    width: 100%;
-    padding: 4px 5px;
-    overflow: hidden;
-    border: 0;
-    border-radius: 4px;
-    font-size: 9px;
-    line-height: 1.3;
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.academic {
-    background: #e7eee2;
-    color: #365b3e;
-}
-
-.financial {
-    background: #f5e7df;
-    color: #925a42;
-}
-
-.personal {
-    background: #eee8f4;
-    color: #6c5686;
-}
-
-.more-events {
-    padding-left: 3px;
-    color: #85877f;
-    font-size: 9px;
-}
-
-.calendar-footer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 17px;
-    padding-top: 18px;
-    margin-top: 4px;
-    border-top: 1px solid #eeece5;
-}
-
-.calendar-footer span {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    color: #747b71;
-    font-size: 10px;
-}
-
-.legend-dot,
-.upcoming-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    flex-shrink: 0;
-    border-radius: 50%;
-}
-
-.academic-dot {
-    background: #668765;
-}
-
-.financial-dot {
-    background: #bd8065;
-}
-
-.personal-dot {
-    background: #9a83b3;
-}
-
-.side-column {
-    display: grid;
-    gap: 18px;
-}
-
-.side-panel {
-    padding: 21px;
-}
-
-.side-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 19px;
-}
-
-.side-heading h2 {
-    font-size: 20px;
-    line-height: 1.35;
-}
-
-.add-icon-button {
-    display: grid;
-    width: 35px;
-    height: 35px;
-    flex-shrink: 0;
-    place-items: center;
-    border: 0;
-    border-radius: 11px;
-    background: #294b3c;
-    color: white;
-    font-size: 22px;
-    cursor: pointer;
-    transition: background 180ms ease, transform 180ms ease;
-}
-
-.add-icon-button:hover {
-    background: #203d30;
-    transform: translateY(-1px);
-}
-
-.event-list {
-    display: grid;
-    gap: 17px;
-}
-
-.event-item {
-    display: flex;
-    gap: 11px;
-}
-
-.event-line {
-    width: 3px;
-    min-height: 48px;
-    flex-shrink: 0;
-    border-radius: 3px;
-}
-
-.event-line.academic {
-    background: #668765;
-}
-
-.event-line.financial {
-    background: #bd8065;
-}
-
-.event-line.personal {
-    background: #9a83b3;
-}
-
-.event-content {
-    min-width: 0;
-    flex: 1;
-}
-
-.event-category {
-    display: inline-block;
-    padding: 4px 7px;
-    border-radius: 5px;
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: capitalize;
-}
-
-.event-content h3 {
-    margin: 7px 0 4px;
-    font-size: 13px;
-    font-weight: 750;
-    overflow-wrap: anywhere;
-}
-
-.event-time {
-    margin: 0;
-    color: #81857d;
-    font-size: 10px;
-}
-
-.event-description {
-    margin: 8px 0 0;
-    color: #81857d;
-    font-size: 11px;
-    line-height: 1.6;
-    white-space: pre-line;
-    overflow-wrap: anywhere;
-}
-
-.event-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 9px;
-}
-
-.event-actions button {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #294b3c;
-    font-size: 10px;
-    font-weight: 750;
-    cursor: pointer;
-}
-
-.event-actions .delete-action {
-    color: #a85f4c;
-}
-
-.mini-empty {
-    padding: 17px 6px 13px;
-    text-align: center;
-}
-
-.mini-empty-icon {
-    display: grid;
-    width: 44px;
-    height: 44px;
-    margin: 0 auto 12px;
-    place-items: center;
-    border-radius: 14px;
-    background: #e8eee4;
-    color: #294b3c;
-    font-size: 21px;
-}
-
-.mini-empty h3 {
-    margin: 0 0 7px;
-    font-family: Georgia, serif;
-    font-size: 17px;
-    font-weight: 500;
-}
-
-.mini-empty p,
-.upcoming-empty {
-    margin: 0;
-    color: #83867e;
-    font-size: 11px;
-    line-height: 1.7;
-}
-
-.inline-add {
-    margin-top: 14px;
-    padding: 9px 12px;
-    border: 1px solid #dce5d8;
-    border-radius: 9px;
-    background: #f0f4ed;
-    color: #294b3c;
-    font-size: 11px;
-    font-weight: 750;
-    cursor: pointer;
-}
-
-.upcoming-symbol {
-    color: #8b9b84;
-    font-size: 22px;
-}
-
-.upcoming-list {
-    display: grid;
-    gap: 5px;
-}
-
-.upcoming-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 7px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-    transition: background 180ms ease;
-}
-
-.upcoming-item:hover {
-    background: #f4f4ee;
-}
-
-.upcoming-date {
-    display: flex;
-    width: 37px;
-    flex-shrink: 0;
-    flex-direction: column;
-    align-items: center;
-    padding: 6px 0;
-    border-radius: 8px;
-    background: #f0eee7;
-}
-
-.upcoming-date strong {
-    font-family: Georgia, serif;
-    font-size: 18px;
-    font-weight: 500;
-}
-
-.upcoming-date small {
-    color: #81857d;
-    font-size: 9px;
-    text-transform: uppercase;
-}
-
-.upcoming-info {
-    display: grid;
-    min-width: 0;
-    flex: 1;
-    gap: 4px;
-}
-
-.upcoming-info strong {
-    overflow: hidden;
-    font-size: 11px;
-    font-weight: 750;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.upcoming-info small {
-    color: #81857d;
-    font-size: 10px;
-}
-
-.upcoming-empty {
-    padding: 4px 0 8px;
-}
-
-.modal-backdrop {
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-    overflow-y: auto;
-    background: rgb(31 42 34 / 48%);
-    backdrop-filter: blur(4px);
-    animation: fade-in 180ms ease both;
-}
-
-.event-modal {
-    width: min(100%, 510px);
-    max-height: calc(100vh - 40px);
-    padding: 27px;
-    overflow-y: auto;
-    border: 1px solid #e9e5dc;
-    border-radius: 20px;
-    background: #fffefa;
-    box-shadow: 0 22px 70px rgb(22 35 26 / 18%);
-    animation: modal-up 220ms ease both;
-}
-
-.modal-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.modal-heading h2 {
-    margin: 0;
-    font-family: Georgia, serif;
-    font-size: 26px;
-    font-weight: 500;
-}
-
-.modal-subtitle {
-    margin: 7px 0 0;
-    color: #83867e;
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-.close-button {
-    display: grid;
-    width: 33px;
-    height: 33px;
-    flex-shrink: 0;
-    place-items: center;
-    border: 0;
-    border-radius: 10px;
-    background: #f0eee7;
-    color: #4b5b4e;
-    font-size: 23px;
-    cursor: pointer;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 17px;
-    color: #435348;
-    font-size: 12px;
-    font-weight: 750;
-}
-
-.required {
-    color: #a85f4c;
-}
-
-.form-label input,
-.form-label select,
-.form-label textarea {
-    box-sizing: border-box;
-    display: block;
-    width: 100%;
-    margin-top: 8px;
-    padding: 12px 13px;
-    border: 1px solid #e2e0d7;
-    border-radius: 10px;
-    outline: none;
-    background: white;
-    color: #273a30;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 400;
-    transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.form-label textarea {
-    resize: vertical;
-    line-height: 1.6;
-}
-
-.form-label input:focus,
-.form-label select:focus,
-.form-label textarea:focus {
-    border-color: #91a68e;
-    box-shadow: 0 0 0 4px rgb(228 235 221 / 75%);
-}
-
-.form-two-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.error {
-    display: block;
-    margin-top: 6px;
-    color: #a85f4c;
-    font-size: 10px;
-    font-weight: 500;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding-top: 7px;
-}
-
-.cancel-button,
-.save-button {
-    padding: 12px 17px;
-    border: 0;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 750;
-    cursor: pointer;
-    transition: background 180ms ease, transform 180ms ease;
-}
-
-.cancel-button {
-    background: #efeee8;
-    color: #405447;
-}
-
-.save-button {
-    background: #294b3c;
-    color: white;
-}
-
-.cancel-button:hover {
-    background: #e5e4db;
-}
-
-.save-button:hover:not(:disabled) {
-    background: #203d30;
-    transform: translateY(-1px);
-}
-
-.save-button:disabled,
-.cancel-button:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-@keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes modal-up {
-    from {
-        opacity: 0;
-        transform: translateY(8px) scale(0.99);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@media (max-width: 1100px) {
-    .page {
-        padding: 26px;
-    }
-
-    .calendar-layout {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .side-column {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: start;
-    }
-}
-
-@media (max-width: 650px) {
-    .page {
-        padding: 22px 14px;
-    }
-
-    .page-header {
-        flex-direction: column;
-    }
-
-    .welcome-strip {
-        min-height: 120px;
-        padding: 22px;
-    }
-
-    .strip-decoration {
-        width: 72px;
-        transform: scale(0.8);
-        transform-origin: center right;
-    }
-
-    .calendar-panel {
-        padding: 15px 10px;
-    }
-
-    .calendar-toolbar {
-        align-items: flex-start;
-        flex-direction: column;
-        margin: 8px 5px 18px;
-    }
-
-    .month-actions {
-        align-self: flex-end;
-    }
-
-    .day-cell {
-        min-height: 70px;
-        padding: 5px 2px;
-    }
-
-    .day-number {
-        width: 22px;
-        height: 22px;
-        font-size: 10px;
-    }
-
-    .day-event {
-        padding: 3px;
-        font-size: 8px;
-    }
-
-    .more-events {
-        font-size: 8px;
-    }
-
-    .calendar-footer {
-        gap: 10px;
-        padding: 14px 4px 2px;
-    }
-
-    .calendar-footer span {
-        font-size: 9px;
-    }
-
-    .side-column {
-        grid-template-columns: 1fr;
-    }
-
-    .form-two-columns {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-
-    .event-modal {
-        padding: 21px 17px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-</style>

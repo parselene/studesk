@@ -18,7 +18,6 @@ const props = defineProps({
 const showForm = ref(false)
 const searchQuery = ref('')
 
-
 const form = useForm({
     subjectId: null,
     name: '',
@@ -41,7 +40,6 @@ const weekDays = [
     'Sunday',
 ]
 
-
 const isEditing = computed(() => form.subjectId !== null)
 
 const filteredSubjects = computed(() => {
@@ -49,13 +47,13 @@ const filteredSubjects = computed(() => {
 
     if (!query) return props.subjects
 
-    return props.subjects.filter(subject => {
-        return [
+    return props.subjects.filter(subject =>
+        [
             subject.name,
             subject.code,
             subject.instructor,
         ].some(value => String(value ?? '').toLowerCase().includes(query))
-    })
+    )
 })
 
 const colorPresets = [
@@ -143,252 +141,439 @@ function initials(name) {
 <template>
     <Head title="Subjects | StuDesk" />
 
-    <div class="page">
-        <div class="page-inner">
-            <!-- Header -->
-            <header class="page-header">
+    <div class="min-w-0 pb-6 text-[#293B32]">
+        <!-- Page header -->
+        <header class="mb-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="mb-2 text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                    YOUR ACADEMIC SPACE
+                </p>
+
+                <h1 class="font-serif text-[32px] font-medium leading-tight tracking-[-0.8px] text-[#294B3C] sm:text-[38px]">
+                    My subjects<span class="text-[#B97962]">.</span>
+                </h1>
+
+                <p class="mt-2 text-[13px] leading-relaxed text-[#85877D]">
+                    All your classes, together in one place.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="primary-button"
+                @click="openCreateForm"
+            >
+                <span class="text-lg font-normal leading-none">+</span>
+                Add subject
+            </button>
+        </header>
+
+        <!-- Semester summary -->
+        <section class="mb-7 flex items-center justify-between gap-4 rounded-2xl border border-[#DDE3D6] bg-[#E7EBDD] p-5 sm:p-6">
+            <div class="flex min-w-0 items-center gap-4">
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#D7E1D2] text-[#42614A]">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="21"
+                        height="21"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                    </svg>
+                </div>
+
+                <div class="min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#788A77]">
+                        YOUR SEMESTER
+                    </p>
+
+                    <h2 class="mt-1 font-serif text-[17px] font-medium text-[#294B3C]">
+                        {{ subjects.length === 0
+                            ? 'A fresh start'
+                            : subjects.length === 1
+                                ? 'Your first class is here'
+                                : 'Your classes, organized' }}
+                    </h2>
+
+                    <p class="mt-1 text-[11px] leading-relaxed text-[#81877B]">
+                        {{ subjects.length === 0
+                            ? 'Add a subject to begin building your academic planner.'
+                            : 'Keep your classes organized and your deadlines connected.' }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="shrink-0 text-right">
+                <strong class="font-serif text-[32px] font-medium leading-none text-[#294B3C]">
+                    {{ subjects.length }}
+                </strong>
+                <p class="mt-1 text-[10px] text-[#7E877A]">
+                    {{ subjects.length === 1 ? 'subject' : 'subjects' }}
+                </p>
+            </div>
+        </section>
+
+        <!-- Subject library -->
+        <section class="min-w-0">
+            <div class="mb-5 flex items-end justify-between gap-3">
                 <div>
-                    <p class="eyebrow">YOUR ACADEMIC SPACE</p>
-                    <h1>My subjects<span class="title-period">.</span></h1>
-                    <p class="subtitle">
-                        All your classes, together in one place.
+                    <p class="mb-1 text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                        YOUR CLASSES
+                    </p>
+
+                    <h2 class="font-serif text-[25px] font-medium tracking-[-0.4px] text-[#294B3C]">
+                        Subject library
+                    </h2>
+
+                    <p class="mt-1 text-[12px] text-[#85877D]">
+                        Your subjects and the tasks connected to them.
                     </p>
                 </div>
 
-                <button
-                    class="primary-button new-subject-button"
-                    type="button"
-                    @click="openCreateForm"
-                >
-                    <span class="plus-icon">+</span>
-                    Add subject
-                </button>
-            </header>
+                <span class="shrink-0 pb-1 text-[11px] text-[#85877D]">
+                    {{ filteredSubjects.length }}
+                    {{ filteredSubjects.length === 1 ? 'subject' : 'subjects' }}
+                </span>
+            </div>
 
-            <!-- Summary -->
-            <section class="summary">
-                <div class="summary-copy">
-                    <span class="summary-icon">▤</span>
-
-                    <div>
-                        <p class="summary-overline">YOUR SEMESTER</p>
-                        <h2>
-                            {{ subjects.length === 0
-                                ? 'A fresh start'
-                                : subjects.length === 1
-                                    ? 'Your first class is here'
-                                    : 'Your classes, organized' }}
-                        </h2>
-                        <p>
-                            {{
-                                subjects.length === 0
-                                    ? 'Add a subject to begin building your academic planner.'
-                                    : 'Keep your classes organized and your deadlines connected.'
-                            }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="summary-count">
-                    <strong>{{ subjects.length }}</strong>
-                    <span>{{ subjects.length === 1 ? 'subject' : 'subjects' }}</span>
-                </div>
-            </section>
-
-            <!-- Subject list -->
-            <section class="subjects-section">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">YOUR CLASSES</p>
-                        <h2>Subject library</h2>
-                        <p class="section-description">
-                            Your subjects and the tasks connected to them.
-                        </p>
-                    </div>
-
-                    <span class="result-count">
-                        {{ filteredSubjects.length }}
-                        {{ filteredSubjects.length === 1 ? 'subject' : 'subjects' }}
-                    </span>
-                </div>
-
-                <!-- Search -->
-                <div class="list-controls">
-                    <div class="search-box">
-                        <span class="search-icon">⌕</span>
-                        <input
-                            v-model="searchQuery"
-                            type="search"
-                            placeholder="Search subjects, codes, or instructors..."
-                            aria-label="Search subjects"
-                        />
-                    </div>
-
-                    <span class="helper-text">
-                        <span class="helper-dot"></span>
-                        Each subject can have its own calendar color
-                    </span>
-                </div>
-
-                <!-- Cards -->
-                <div v-if="filteredSubjects.length" class="subject-grid">
-                    <article
-                        v-for="subject in filteredSubjects"
-                        :key="subject.id"
-                        class="subject-card"
+            <!-- Search -->
+            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-h-[42px] w-full items-center gap-2.5 rounded-xl border border-[#EAE6DD] bg-white px-3.5 transition focus-within:border-[#AAB9A3] focus-within:ring-2 focus-within:ring-[#E7EBDD] sm:max-w-[390px]">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#8B8C7D"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                     >
-                        <div
-                            class="subject-color-strip"
-                            :style="{ backgroundColor: subject.color || '#294B3C' }"
-                        ></div>
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
 
-                        <div class="subject-card-content">
-                            <div class="subject-card-top">
-                                <div
-                                    class="subject-avatar"
-                                    :style="{
-                                        backgroundColor: `${subject.color || '#294B3C'}16`,
-                                        color: subject.color || '#294B3C',
-                                    }"
-                                >
-                                    {{ initials(subject.name) }}
-                                </div>
+                    <input
+                        v-model="searchQuery"
+                        type="search"
+                        placeholder="Search subjects, codes, or instructors..."
+                        aria-label="Search subjects"
+                        class="w-full border-0 bg-transparent py-2.5 text-[12px] text-[#293B32] outline-none placeholder:text-[#A1A297] focus:ring-0"
+                    />
+                </div>
 
-                                <div class="subject-card-actions">
-                                    <button
-                                        type="button"
-                                        class="icon-button"
-                                        title="Edit subject"
-                                        aria-label="Edit subject"
-                                        @click="editSubject(subject)"
-                                    >
-                                        ✎
-                                    </button>
+                <span class="flex items-center gap-2 text-[10px] text-[#929488]">
+                    <span class="h-1.5 w-1.5 rounded-full bg-[#8EA287]"></span>
+                    Each subject has its own calendar color
+                </span>
+            </div>
 
-                                    <button
-                                        type="button"
-                                        class="icon-button delete-icon"
-                                        title="Delete subject"
-                                        aria-label="Delete subject"
-                                        @click="deleteSubject(subject)"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
+            <!-- Subject cards -->
+            <div
+                v-if="filteredSubjects.length"
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
+            >
+                <article
+                    v-for="subject in filteredSubjects"
+                    :key="subject.id"
+                    class="group min-w-0 overflow-hidden rounded-2xl border border-[#EAE6DD] bg-white shadow-[0_2px_8px_rgba(39,58,48,0.025)] transition duration-200 hover:-translate-y-0.5 hover:border-[#D8E0D2] hover:shadow-[0_8px_22px_rgba(39,58,48,0.05)]"
+                >
+                    <div
+                        class="h-1 w-full"
+                        :style="{ backgroundColor: subject.color || '#294B3C' }"
+                    ></div>
+
+                    <div class="p-5">
+                        <div class="mb-4 flex items-start justify-between gap-3">
+                            <div
+                                class="grid h-11 w-11 shrink-0 place-items-center rounded-xl font-serif text-[16px] font-semibold"
+                                :style="{
+                                    backgroundColor: `${subject.color || '#294B3C'}16`,
+                                    color: subject.color || '#294B3C',
+                                }"
+                            >
+                                {{ initials(subject.name) }}
                             </div>
 
-                            <div class="subject-heading">
-                                <h3>{{ subject.name }}</h3>
-                                <span
-                                    v-if="subject.code"
-                                    class="subject-code"
+                            <div class="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    class="grid h-8 w-8 place-items-center rounded-lg text-[#81887C] transition hover:bg-[#E7EBDD] hover:text-[#294B3C]"
+                                    title="Edit subject"
+                                    aria-label="Edit subject"
+                                    @click="editSubject(subject)"
                                 >
-                                    {{ subject.code }}
-                                </span>
-                            </div>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                                    </svg>
+                                </button>
 
-                            <p class="instructor">
-                                <span class="instructor-icon">♙</span>
+                                <button
+                                    type="button"
+                                    class="grid h-8 w-8 place-items-center rounded-lg text-[#81887C] transition hover:bg-[#F5E4DD] hover:text-[#A85F4C]"
+                                    title="Delete subject"
+                                    aria-label="Delete subject"
+                                    @click="deleteSubject(subject)"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M3 6h18" />
+                                        <path d="M8 6V4h8v2" />
+                                        <path d="m19 6-1 14H6L5 6" />
+                                        <path d="M10 11v5M14 11v5" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-[15px] font-semibold leading-relaxed text-[#354638]">
+                                {{ subject.name }}
+                            </h3>
+
+                            <span
+                                v-if="subject.code"
+                                class="rounded-md bg-[#F0EFE8] px-2 py-1 text-[9px] font-semibold text-[#818578]"
+                            >
+                                {{ subject.code }}
+                            </span>
+                        </div>
+
+                        <div class="mt-3 space-y-2">
+                            <p class="flex items-center gap-2 text-[11px] leading-relaxed text-[#878B80]">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="shrink-0"
+                                >
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="10" cy="7" r="4" />
+                                    <path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
                                 {{ subject.instructor || 'No instructor added' }}
                             </p>
 
-                            
-<p
-    v-if="subject.class_days?.length"
-    class="instructor"
->
-    <span class="instructor-icon">◷</span>
-    {{ subject.class_days.map(day => day.slice(0, 3)).join(', ') }}
+                            <p
+                                v-if="subject.class_days?.length"
+                                class="flex items-center gap-2 text-[11px] leading-relaxed text-[#878B80]"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="shrink-0"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 6v6l4 2" />
+                                </svg>
 
-    <template v-if="subject.start_time && subject.end_time">
-        · {{ subject.start_time.slice(0, 5) }}
-        – {{ subject.end_time.slice(0, 5) }}
-    </template>
-</p>
+                                <span>
+                                    {{ subject.class_days.map(day => day.slice(0, 3)).join(', ') }}
 
-<p
-    v-if="subject.classroom"
-    class="instructor"
->
-    <span class="instructor-icon">⌖</span>
-    {{ subject.classroom }}
-</p>
-
-
-                            <div class="card-divider"></div>
-
-                            <div class="subject-card-footer">
-                                <span class="task-summary">
-                                    <span class="task-summary-icon">☷</span>
-                                    {{ subject.tasks_count ?? 0 }}
-                                    {{ subject.tasks_count === 1 ? 'related task' : 'related tasks' }}
+                                    <template v-if="subject.start_time && subject.end_time">
+                                        · {{ subject.start_time.slice(0, 5) }} – {{ subject.end_time.slice(0, 5) }}
+                                    </template>
                                 </span>
+                            </p>
 
-                                <span
-                                    class="color-indicator"
-                                    :style="{ backgroundColor: subject.color || '#294B3C' }"
-                                    :title="`Subject color: ${subject.color || '#294B3C'}`"
-                                ></span>
-                            </div>
+                            <p
+                                v-if="subject.classroom"
+                                class="flex items-center gap-2 text-[11px] leading-relaxed text-[#878B80]"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="shrink-0"
+                                >
+                                    <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                                    <circle cx="12" cy="10" r="2.5" />
+                                </svg>
+                                {{ subject.classroom }}
+                            </p>
                         </div>
-                    </article>
 
-                    <!-- Add card -->
-                    <button
-                        type="button"
-                        class="add-subject-card"
-                        @click="openCreateForm"
-                    >
-                        <span class="add-card-icon">+</span>
-                        <strong>Add another subject</strong>
-                        <span>Make space for another class</span>
-                    </button>
-                </div>
+                        <div class="my-4 h-px bg-[#EEEBE3]"></div>
 
-                <!-- Search empty state -->
-                <div
-                    v-else-if="searchQuery"
-                    class="empty-state"
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="flex items-center gap-2 text-[10px] text-[#777F73]">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M8 6h13M8 12h13M8 18h13" />
+                                    <path d="M3 6h.01M3 12h.01M3 18h.01" />
+                                </svg>
+
+                                {{ subject.tasks_count ?? 0 }}
+                                {{ subject.tasks_count === 1 ? 'related task' : 'related tasks' }}
+                            </span>
+
+                            <span
+                                class="h-2.5 w-2.5 shrink-0 rounded-full ring-[3px] ring-[#F2F1EB]"
+                                :style="{ backgroundColor: subject.color || '#294B3C' }"
+                                :title="`Subject color: ${subject.color || '#294B3C'}`"
+                            ></span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Add another subject -->
+                <button
+                    type="button"
+                    class="flex min-h-[190px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#D9DDD1] bg-white/50 px-5 py-6 text-[#697A69] transition hover:-translate-y-0.5 hover:border-[#9CAD96] hover:bg-[#F0F2E9]"
+                    @click="openCreateForm"
                 >
-                    <div class="empty-illustration">⌕</div>
-                    <h3>No matching subjects</h3>
-                    <p>
-                        Try searching with a different subject name, code, or instructor.
-                    </p>
+                    <span class="grid h-10 w-10 place-items-center rounded-xl bg-[#E8EEE2] text-[22px] text-[#49694E]">
+                        +
+                    </span>
 
-                    <button
-                        type="button"
-                        class="secondary-button"
-                        @click="searchQuery = ''"
+                    <strong class="text-[12px] font-semibold">
+                        Add another subject
+                    </strong>
+
+                    <span class="text-[10px] text-[#96988D]">
+                        Make space for another class
+                    </span>
+                </button>
+            </div>
+
+            <!-- Search empty state -->
+            <div
+                v-else-if="searchQuery"
+                class="rounded-2xl border border-dashed border-[#DFDFD4] bg-white/60 px-5 py-12 text-center"
+            >
+                <div class="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#E7EBDD] text-[#557653]">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                     >
-                        Clear search
-                    </button>
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
                 </div>
 
-                <!-- First-use empty state -->
-                <div v-else class="empty-state">
-                    <div class="empty-illustration">▤</div>
-                    <h3>Your semester starts here</h3>
-                    <p>
-                        Add your first subject to start organizing classes,
-                        assignments, exams, and study time.
-                    </p>
+                <h3 class="font-serif text-[21px] font-medium text-[#294B3C]">
+                    No matching subjects
+                </h3>
 
-                    <button
-                        type="button"
-                        class="primary-button"
-                        @click="openCreateForm"
-                    >
-                        <span class="plus-icon">+</span>
-                        Add your first subject
-                    </button>
-                </div>
-
-                <p class="list-footer">
-                    A little organization goes a long way.
+                <p class="mx-auto mt-2 max-w-[320px] text-[12px] leading-relaxed text-[#888B81]">
+                    Try searching with a different subject name, code, or instructor.
                 </p>
-            </section>
-        </div>
+
+                <button
+                    type="button"
+                    class="secondary-button mt-5"
+                    @click="searchQuery = ''"
+                >
+                    Clear search
+                </button>
+            </div>
+
+            <!-- First-use empty state -->
+            <div
+                v-else
+                class="rounded-2xl border border-dashed border-[#DFDFD4] bg-white/60 px-5 py-12 text-center"
+            >
+                <div class="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#E7EBDD] text-[#557653]">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                    </svg>
+                </div>
+
+                <h3 class="font-serif text-[21px] font-medium text-[#294B3C]">
+                    Your semester starts here
+                </h3>
+
+                <p class="mx-auto mt-2 max-w-[340px] text-[12px] leading-relaxed text-[#888B81]">
+                    Add your first subject to start organizing classes, assignments, exams, and study time.
+                </p>
+
+                <button
+                    type="button"
+                    class="primary-button mt-5"
+                    @click="openCreateForm"
+                >
+                    <span class="text-lg font-normal leading-none">+</span>
+                    Add your first subject
+                </button>
+            </div>
+
+            <p class="mt-5 text-center font-serif text-[12px] italic text-[#A0A194]">
+                A little organization goes a long way.
+            </p>
+        </section>
 
         <!-- Create / edit modal -->
         <Transition name="modal">
@@ -406,22 +591,25 @@ function initials(name) {
                 >
                     <header class="modal-header">
                         <div>
-                            <p class="eyebrow">
+                            <p class="mb-2 text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
                                 {{ isEditing ? 'UPDATE YOUR CLASSES' : 'BUILD YOUR SEMESTER' }}
                             </p>
 
-                            <h2 id="modal-title">
+                            <h2
+                                id="modal-title"
+                                class="font-serif text-[27px] font-medium text-[#294B3C]"
+                            >
                                 {{ isEditing ? 'Edit subject' : 'Add a subject' }}
                             </h2>
 
-                            <p>
+                            <p class="mt-2 text-[11px] leading-relaxed text-[#888B81]">
                                 Add the class details so your academic plans stay organized.
                             </p>
                         </div>
 
                         <button
                             type="button"
-                            class="close-button"
+                            class="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#E9E7DE] bg-[#F8F7F2] text-[22px] leading-none text-[#6C796C] transition hover:bg-[#EEEEE5]"
                             aria-label="Close form"
                             @click="resetForm"
                         >
@@ -430,7 +618,7 @@ function initials(name) {
                     </header>
 
                     <form class="subject-form" @submit.prevent="saveSubject">
-                        <label>
+                        <label class="form-label">
                             Subject name <span class="required">*</span>
 
                             <input
@@ -447,7 +635,7 @@ function initials(name) {
                         </label>
 
                         <div class="form-row">
-                            <label>
+                            <label class="form-label">
                                 Subject code
                                 <span class="optional">Optional</span>
 
@@ -462,7 +650,7 @@ function initials(name) {
                                 </small>
                             </label>
 
-                            <label>
+                            <label class="form-label">
                                 Instructor
                                 <span class="optional">Optional</span>
 
@@ -476,95 +664,96 @@ function initials(name) {
                                     {{ form.errors.instructor }}
                                 </small>
                             </label>
-                        </div>                        
-                    <div class="schedule-section">
-                        <div class="schedule-heading">
-                            <label>Class schedule</label>
-                            <p>Select the days and times for this subject.</p>
                         </div>
 
-                        <div class="day-options">
-                            <label
-                                v-for="day in weekDays"
-                                :key="day"
-                                class="day-option"
-                                :class="{ selected: form.class_days.includes(day) }"
-                            >
+                        <!-- Class schedule -->
+                        <div class="schedule-section">
+                            <div>
+                                <p class="text-[11px] font-bold text-[#48584A]">
+                                    Class schedule
+                                </p>
+                                <p class="mt-1 text-[10px] leading-relaxed text-[#929488]">
+                                    Select the days and times for this subject.
+                                </p>
+                            </div>
+
+                            <div class="day-options">
+                                <label
+                                    v-for="day in weekDays"
+                                    :key="day"
+                                    class="day-option"
+                                    :class="{ selected: form.class_days.includes(day) }"
+                                >
+                                    <input
+                                        v-model="form.class_days"
+                                        type="checkbox"
+                                        :value="day"
+                                    />
+                                    <span>{{ day.slice(0, 3) }}</span>
+                                </label>
+                            </div>
+
+                            <div class="form-row">
+                                <label class="form-label">
+                                    Start time
+                                    <input
+                                        v-model="form.start_time"
+                                        type="time"
+                                    />
+                                </label>
+
+                                <label class="form-label">
+                                    End time
+                                    <input
+                                        v-model="form.end_time"
+                                        type="time"
+                                        :min="form.start_time || undefined"
+                                    />
+                                </label>
+                            </div>
+
+                            <label class="form-label mt-3">
+                                Classroom / Location
+                                <span class="optional">Optional</span>
                                 <input
-                                    v-model="form.class_days"
-                                    type="checkbox"
-                                    :value="day"
+                                    v-model="form.classroom"
+                                    type="text"
+                                    placeholder="e.g. Room 302 or Online"
                                 />
-                                <span>{{ day.slice(0, 3) }}</span>
                             </label>
+
+                            <small v-if="form.errors.class_days" class="error">
+                                {{ form.errors.class_days }}
+                            </small>
+
+                            <small v-if="form.errors.start_time" class="error">
+                                {{ form.errors.start_time }}
+                            </small>
+
+                            <small v-if="form.errors.end_time" class="error">
+                                {{ form.errors.end_time }}
+                            </small>
                         </div>
 
-                        <div class="form-row schedule-times">
-                            <label>
-                                Start time
-                                <input
-                                    v-model="form.start_time"
-                                    type="time"
-                                />
-                            </label>
-
-                            <label>
-                                End time
-                                <input
-                                    v-model="form.end_time"
-                                    type="time"
-                                    :min="form.start_time || undefined"
-                                />
-                            </label>
-                        </div>
-
-                        <label class="classroom-field">
-                            Classroom / Location
-                            <span class="optional">Optional</span>
-                            <input
-                                v-model="form.classroom"
-                                type="text"
-                                placeholder="e.g. Room 302 or Online"
-                            />
-                        </label>
-
-                        <small
-                            v-if="form.errors.class_days"
-                            class="error"
-                        >
-                            {{ form.errors.class_days }}
-                        </small>
-
-                        <small
-                            v-if="form.errors.start_time"
-                            class="error"
-                        >
-                            {{ form.errors.start_time }}
-                        </small>
-
-                        <small
-                            v-if="form.errors.end_time"
-                            class="error"
-                        >
-                            {{ form.errors.end_time }}
-                        </small>
-                    </div>
-
-
+                        <!-- Subject color -->
                         <div class="color-section">
-                            <div class="color-section-heading">
+                            <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <label class="color-label">Subject color</label>
-                                    <p>Choose a color to identify this class.</p>
+                                    <p class="text-[11px] font-bold text-[#48584A]">
+                                        Subject color
+                                    </p>
+                                    <p class="mt-1 text-[10px] text-[#929488]">
+                                        Choose a color to identify this class.
+                                    </p>
                                 </div>
 
                                 <span
-                                    class="selected-color"
+                                    class="h-6 w-6 shrink-0 rounded-full border-[3px] border-white shadow-[0_0_0_1px_#E1DFD5]"
                                     :style="{ backgroundColor: form.color }"
                                 ></span>
                             </div>
 
-                            <div class="color-options">
+                            <div class="mt-4 flex flex-wrap items-center gap-3">
                                 <button
                                     v-for="preset in colorPresets"
                                     :key="preset.value"
@@ -580,7 +769,10 @@ function initials(name) {
                                     <span v-if="form.color.toLowerCase() === preset.value.toLowerCase()">✓</span>
                                 </button>
 
-                                <label class="custom-color" title="Choose a custom color">
+                                <label
+                                    class="custom-color"
+                                    title="Choose a custom color"
+                                >
                                     <input
                                         v-model="form.color"
                                         type="color"
@@ -590,7 +782,9 @@ function initials(name) {
                                 </label>
                             </div>
 
-                            <p class="color-code">{{ form.color.toUpperCase() }}</p>
+                            <p class="mt-3 text-[9px] tracking-[1px] text-[#93968A]">
+                                {{ form.color.toUpperCase() }}
+                            </p>
 
                             <small v-if="form.errors.color" class="error">
                                 {{ form.errors.color }}
@@ -629,558 +823,52 @@ function initials(name) {
 </template>
 
 <style scoped>
-:global(body) {
-    margin: 0;
-    background: #f8f7f2;
-}
-
-.page {
-    min-height: 100vh;
-    padding: 36px 24px 48px;
-    color: #2c4034;
-    background: #f8f7f2;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.page-inner {
-    width: 100%;
-    max-width: 1060px;
-    margin: 0 auto;
-}
-
-.page-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 28px;
-}
-
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #8a9385;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.7px;
-}
-
-h1,
-h2,
-h3,
-p {
-    overflow-wrap: anywhere;
-}
-
-h1 {
-    margin: 0;
-    color: #2b4033;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(30px, 4vw, 40px);
-    font-weight: 500;
-    letter-spacing: -1.1px;
-    line-height: 1.2;
-}
-
-.title-period {
-    color: #bb806a;
-}
-
-.subtitle {
-    margin: 10px 0 0;
-    color: #81867c;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
 .primary-button,
 .secondary-button {
     display: inline-flex;
+    min-height: 40px;
     align-items: center;
     justify-content: center;
     gap: 9px;
-    min-height: 42px;
-    padding: 0 17px;
-    border: 1px solid transparent;
     border-radius: 11px;
+    padding: 0 16px;
     font-family: inherit;
     font-size: 12px;
     font-weight: 650;
-    cursor: pointer;
     transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+    cursor: pointer;
 }
 
 .primary-button {
-    background: #294b3c;
-    color: #fffefa;
+    border: 1px solid #294B3C;
+    background: #294B3C;
+    color: #FFFEFA;
 }
 
 .primary-button:hover:not(:disabled) {
-    background: #203d30;
     transform: translateY(-1px);
+    background: #203D30;
 }
 
 .primary-button:disabled {
-    opacity: 0.6;
     cursor: wait;
+    opacity: 0.6;
 }
 
 .secondary-button {
-    border-color: #e4e3da;
-    background: #fffefa;
-    color: #4a5d4e;
+    border: 1px solid #E4E3DA;
+    background: #FFFEFA;
+    color: #4A5D4E;
 }
 
 .secondary-button:hover:not(:disabled) {
-    background: #f0f0e8;
+    background: #F0F0E8;
 }
 
 .secondary-button:disabled {
-    opacity: 0.6;
     cursor: wait;
+    opacity: 0.6;
 }
-
-.plus-icon {
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 1;
-}
-
-.new-subject-button {
-    flex-shrink: 0;
-    margin-bottom: 2px;
-}
-
-/* Summary */
-
-.summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 35px;
-    padding: 23px 25px;
-    border: 1px solid #e5e7dc;
-    border-radius: 17px;
-    background: #edf0e7;
-}
-
-.summary-copy {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    min-width: 0;
-}
-
-.summary-icon {
-    display: grid;
-    width: 45px;
-    height: 45px;
-    flex: 0 0 45px;
-    place-items: center;
-    border-radius: 14px;
-    background: #dce5d5;
-    color: #42614a;
-    font-size: 21px;
-}
-
-.summary-overline {
-    margin: 0 0 5px;
-    color: #788a77;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.4px;
-}
-
-.summary-copy h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.summary-copy > div > p:last-child {
-    margin: 5px 0 0;
-    color: #81877b;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.summary-count {
-    display: flex;
-    flex: 0 0 auto;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.summary-count strong {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 32px;
-    font-weight: 500;
-    line-height: 1.1;
-}
-
-.summary-count span {
-    margin-top: 5px;
-    color: #7e877a;
-    font-size: 10px;
-}
-
-/* Section header */
-
-.subjects-section {
-    min-width: 0;
-}
-
-.section-heading {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 19px;
-}
-
-.section-heading .eyebrow {
-    margin-bottom: 5px;
-}
-
-.section-heading h2 {
-    margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 27px;
-    font-weight: 500;
-    letter-spacing: -0.5px;
-}
-
-.section-description {
-    margin: 6px 0 0;
-    color: #888b81;
-    font-size: 12px;
-    line-height: 1.6;
-}
-
-.result-count {
-    flex-shrink: 0;
-    padding-bottom: 3px;
-    color: #8b8e84;
-    font-size: 11px;
-}
-
-/* Search */
-
-.list-controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 17px;
-}
-
-.search-box {
-    display: flex;
-    align-items: center;
-    width: min(100%, 360px);
-    min-height: 41px;
-    padding: 0 12px;
-    border: 1px solid #e7e5dc;
-    border-radius: 10px;
-    background: #fffefa;
-    transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.search-box:focus-within {
-    border-color: #9cac97;
-    box-shadow: 0 0 0 3px rgb(224 232 218 / 65%);
-}
-
-.search-icon {
-    margin-right: 8px;
-    color: #8a9385;
-    font-size: 21px;
-}
-
-.search-box input {
-    width: 100%;
-    min-width: 0;
-    padding: 10px 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: #2c4034;
-    font: inherit;
-    font-size: 11px;
-}
-
-.search-box input::placeholder {
-    color: #a1a297;
-}
-
-.helper-text {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    color: #929488;
-    font-size: 10px;
-}
-
-.helper-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #8ea287;
-}
-
-/* Subject cards */
-
-.subject-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 13px;
-}
-
-.subject-card {
-    position: relative;
-    min-width: 0;
-    overflow: hidden;
-    border: 1px solid #e9e7df;
-    border-radius: 15px;
-    background: #fffefa;
-    box-shadow: 0 2px 7px rgb(39 58 48 / 2%);
-    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
-}
-
-.subject-card:hover {
-    transform: translateY(-2px);
-    border-color: #d8e0d2;
-    box-shadow: 0 8px 22px rgb(39 58 48 / 5%);
-}
-
-.subject-color-strip {
-    width: 100%;
-    height: 4px;
-}
-
-.subject-card-content {
-    padding: 17px 18px 15px;
-}
-
-.subject-card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 17px;
-}
-
-.subject-avatar {
-    display: grid;
-    width: 43px;
-    height: 43px;
-    flex: 0 0 43px;
-    place-items: center;
-    border-radius: 13px;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-}
-
-.subject-card-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.icon-button {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    place-items: center;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    background: transparent;
-    color: #81887c;
-    font-family: inherit;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 180ms ease, color 180ms ease;
-}
-
-.icon-button:hover {
-    background: #edf0e8;
-    color: #294b3c;
-}
-
-.icon-button.delete-icon:hover {
-    background: #f8e9e3;
-    color: #a85f4c;
-}
-
-.subject-heading {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.subject-heading h3 {
-    margin: 0;
-    color: #354638;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.5;
-}
-
-.subject-code {
-    padding: 4px 7px;
-    border-radius: 6px;
-    background: #f0efe8;
-    color: #818578;
-    font-size: 9px;
-    font-weight: 650;
-}
-
-.instructor {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin: 8px 0 0;
-    color: #878b80;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.instructor-icon {
-    color: #9a9c8f;
-    font-size: 13px;
-}
-
-.card-divider {
-    height: 1px;
-    margin: 17px 0 12px;
-    background: #eeece5;
-}
-
-.subject-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.task-summary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: #777f73;
-    font-size: 10px;
-}
-
-.task-summary-icon {
-    color: #8b9885;
-    font-size: 14px;
-}
-
-.color-indicator {
-    width: 9px;
-    height: 9px;
-    flex: 0 0 9px;
-    border-radius: 50%;
-    box-shadow: 0 0 0 3px #f2f1eb;
-}
-
-/* Add another subject card */
-
-.add-subject-card {
-    display: flex;
-    min-height: 200px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 20px;
-    border: 1px dashed #d9ddd1;
-    border-radius: 15px;
-    background: rgb(255 254 250 / 45%);
-    color: #697a69;
-    font-family: inherit;
-    cursor: pointer;
-    transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
-}
-
-.add-subject-card:hover {
-    transform: translateY(-2px);
-    border-color: #9cad96;
-    background: #f0f2e9;
-}
-
-.add-card-icon {
-    display: grid;
-    width: 38px;
-    height: 38px;
-    margin-bottom: 3px;
-    place-items: center;
-    border-radius: 12px;
-    background: #e8eee2;
-    color: #49694e;
-    font-size: 22px;
-}
-
-.add-subject-card strong {
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.add-subject-card > span:last-child {
-    color: #96988d;
-    font-size: 10px;
-}
-
-/* Empty state */
-
-.empty-state {
-    padding: 48px 20px;
-    border: 1px dashed #dfdfd4;
-    border-radius: 15px;
-    background: rgb(255 254 250 / 60%);
-    text-align: center;
-}
-
-.empty-illustration {
-    display: grid;
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 15px;
-    place-items: center;
-    border-radius: 16px;
-    background: #e7eee2;
-    color: #557653;
-    font-size: 22px;
-}
-
-.empty-state h3 {
-    margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 21px;
-    font-weight: 500;
-}
-
-.empty-state p {
-    max-width: 320px;
-    margin: 8px auto 18px;
-    color: #888b81;
-    font-size: 12px;
-    line-height: 1.7;
-}
-
-.list-footer {
-    margin: 20px 0 0;
-    color: #a0a194;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 12px;
-    font-style: italic;
-    text-align: center;
-}
-
-/* Modal */
 
 .modal-overlay {
     position: fixed;
@@ -1202,7 +890,7 @@ h1 {
     overflow-y: auto;
     border: 1px solid rgb(255 255 255 / 65%);
     border-radius: 20px;
-    background: #fffefa;
+    background: #FFFEFA;
     box-shadow: 0 24px 80px rgb(28 43 33 / 18%);
 }
 
@@ -1211,68 +899,31 @@ h1 {
     align-items: flex-start;
     justify-content: space-between;
     gap: 20px;
-    padding: 25px 27px 20px;
-    border-bottom: 1px solid #eeece4;
-}
-
-.modal-header h2 {
-    margin: 0;
-    color: #2c4034;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 27px;
-    font-weight: 500;
-}
-
-.modal-header > div > p:last-child {
-    margin: 7px 0 0;
-    color: #888b81;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.close-button {
-    display: grid;
-    width: 33px;
-    height: 33px;
-    flex: 0 0 33px;
-    place-items: center;
-    border: 1px solid #e9e7de;
-    border-radius: 10px;
-    background: #f8f7f2;
-    color: #6c796c;
-    font-family: inherit;
-    font-size: 23px;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 180ms ease;
-}
-
-.close-button:hover {
-    background: #eeeee5;
+    padding: 24px 26px 19px;
+    border-bottom: 1px solid #EEEBE3;
 }
 
 .subject-form {
-    padding: 22px 27px 27px;
+    padding: 21px 26px 25px;
 }
 
-.subject-form > label,
-.form-row > label {
+.form-label {
     display: block;
     min-width: 0;
-    margin-bottom: 17px;
-    color: #48584a;
+    margin-bottom: 16px;
+    color: #48584A;
     font-size: 11px;
     font-weight: 700;
 }
 
 .required {
-    color: #b56e58;
+    color: #B56E58;
 }
 
 .optional {
     display: block;
     margin-top: 3px;
-    color: #a0a195;
+    color: #A0A195;
     font-size: 9px;
     font-weight: 400;
 }
@@ -1283,12 +934,12 @@ h1 {
     width: 100%;
     min-width: 0;
     margin-top: 7px;
-    padding: 11px 12px;
-    border: 1px solid #e4e3d9;
+    padding: 10px 12px;
+    border: 1px solid #E4E3D9;
     border-radius: 9px;
     outline: none;
-    background: #fff;
-    color: #2c4034;
+    background: #FFFFFF;
+    color: #293B32;
     font-family: inherit;
     font-size: 12px;
     font-weight: 400;
@@ -1296,7 +947,7 @@ h1 {
 }
 
 .subject-form input:not([type="color"]):focus {
-    border-color: #94a68f;
+    border-color: #94A68F;
     box-shadow: 0 0 0 3px rgb(224 232 218 / 75%);
 }
 
@@ -1306,172 +957,13 @@ h1 {
     gap: 14px;
 }
 
+.schedule-section,
 .color-section {
-    margin-top: 2px;
+    margin: 3px 0 18px;
     padding: 16px;
-    border: 1px solid #eceae1;
+    border: 1px solid #ECEAE1;
     border-radius: 12px;
-    background: #faf9f5;
-}
-
-.color-section-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.color-label {
-    color: #48584a;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.color-section-heading p {
-    margin: 5px 0 0;
-    color: #929488;
-    font-size: 10px;
-}
-
-.selected-color {
-    width: 24px;
-    height: 24px;
-    flex: 0 0 24px;
-    border: 3px solid white;
-    border-radius: 50%;
-    box-shadow: 0 0 0 1px #e1dfd5;
-}
-
-.color-options {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 11px;
-    margin-top: 17px;
-}
-
-.color-swatch {
-    display: grid;
-    width: 29px;
-    height: 29px;
-    flex: 0 0 29px;
-    place-items: center;
-    border: 2px solid transparent;
-    border-radius: 50%;
-    color: white;
-    font-size: 12px;
-    cursor: pointer;
-    transition: transform 160ms ease, box-shadow 160ms ease;
-}
-
-.color-swatch:hover {
-    transform: scale(1.08);
-}
-
-.color-swatch.selected {
-    box-shadow: 0 0 0 2px #faf9f5, 0 0 0 3px #7c8c77;
-}
-
-.custom-color {
-    position: relative;
-    display: grid;
-    width: 29px;
-    height: 29px;
-    flex: 0 0 29px;
-    place-items: center;
-    overflow: hidden;
-    border: 1px dashed #c8cbbf;
-    border-radius: 50%;
-    background: white;
-    color: #697b68;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.custom-color input[type="color"] {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    border: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.custom-color span {
-    pointer-events: none;
-}
-
-.color-code {
-    margin: 11px 0 0;
-    color: #93968a;
-    font-size: 9px;
-    letter-spacing: 1px;
-}
-
-.error {
-    display: block;
-    margin-top: 5px;
-    color: #b15e4b;
-    font-size: 10px;
-    font-weight: 500;
-    line-height: 1.5;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 9px;
-    margin-top: 23px;
-    padding-top: 18px;
-    border-top: 1px solid #eeece4;
-}
-
-/* Modal animation */
-
-.modal-enter-active,
-.modal-leave-active {
-    transition: opacity 180ms ease;
-}
-
-.modal-enter-active .subject-modal,
-.modal-leave-active .subject-modal {
-    transition: transform 180ms ease, opacity 180ms ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-    opacity: 0;
-}
-
-.modal-enter-from .subject-modal,
-.modal-leave-to .subject-modal {
-    opacity: 0;
-    transform: translateY(8px) scale(0.99);
-}
-
-
-.schedule-section {
-    margin: 3px 0 20px;
-    padding: 16px;
-    border: 1px solid #eceae1;
-    border-radius: 12px;
-    background: #faf9f5;
-}
-
-.schedule-heading > label,
-.classroom-field {
-    color: #48584a;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.schedule-heading p {
-    margin: 5px 0 0;
-    color: #929488;
-    font-size: 10px;
-    line-height: 1.6;
+    background: #FAF9F5;
 }
 
 .day-options {
@@ -1498,18 +990,18 @@ h1 {
     min-height: 34px;
     align-items: center;
     justify-content: center;
-    border: 1px solid #e4e3d9;
+    border: 1px solid #E4E3D9;
     border-radius: 9px;
-    background: #fffefa;
-    color: #777f73;
+    background: #FFFEFA;
+    color: #777F73;
     font-size: 10px;
     transition: 160ms ease;
 }
 
 .day-option.selected span {
     border-color: #789477;
-    background: #e5ede3;
-    color: #294b3c;
+    background: #E5EDE3;
+    color: #294B3C;
     font-weight: 700;
 }
 
@@ -1518,88 +1010,104 @@ h1 {
     outline-offset: 2px;
 }
 
-.schedule-times {
-    margin-top: 5px;
+.color-swatch {
+    display: grid;
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+    place-items: center;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
-.classroom-field {
+.color-swatch:hover {
+    transform: scale(1.08);
+}
+
+.color-swatch.selected {
+    box-shadow: 0 0 0 2px #FAF9F5, 0 0 0 3px #7C8C77;
+}
+
+.custom-color {
+    position: relative;
+    display: grid;
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+    place-items: center;
+    overflow: hidden;
+    border: 1px dashed #C8CBBF;
+    border-radius: 50%;
+    background: white;
+    color: #697B68;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.custom-color input[type="color"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.custom-color span {
+    pointer-events: none;
+}
+
+.error {
     display: block;
-    margin-top: 3px;
+    margin-top: 5px;
+    color: #B15E4B;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.5;
 }
 
-.classroom-field input {
-    font-weight: 400 !important;
+.modal-actions {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 22px;
+    padding-top: 17px;
+    border-top: 1px solid #EEEBE3;
+    background: #FFFEFA;
 }
 
+/* Modal animation */
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 180ms ease;
+}
+
+.modal-enter-active .subject-modal,
+.modal-leave-active .subject-modal {
+    transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-enter-from .subject-modal,
+.modal-leave-to .subject-modal {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+}
 
 /* Responsive */
-
-@media (max-width: 800px) {
-    .page {
-        padding: 25px 18px 38px;
-    }
-
-    .list-controls {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .search-box {
-        width: 100%;
-        box-sizing: border-box;
-    }
-}
-
 @media (max-width: 580px) {
-    .page {
-        padding: 20px 14px 32px;
-    }
-
-    .page-header {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .back-link {
-        margin-bottom: 20px;
-    }
-
-    .new-subject-button {
-        width: 100%;
-    }
-
-    .summary {
-        padding: 18px;
-    }
-
-    .summary-copy {
-        align-items: flex-start;
-        gap: 11px;
-    }
-
-    .summary-icon {
-        width: 38px;
-        height: 38px;
-        flex-basis: 38px;
-    }
-
-    .summary-count strong {
-        font-size: 26px;
-    }
-
-    .section-heading h2 {
-        font-size: 25px;
-    }
-
-    .subject-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .add-subject-card {
-        min-height: 150px;
-    }
-
     .modal-overlay {
         align-items: flex-end;
         padding: 10px;
@@ -1621,12 +1129,6 @@ h1 {
     .form-row {
         grid-template-columns: 1fr;
         gap: 0;
-    }
-
-    .modal-actions {
-        position: sticky;
-        bottom: 0;
-        background: #fffefa;
     }
 }
 

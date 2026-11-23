@@ -1,11 +1,11 @@
+
 <script setup>
 import { computed, ref } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { ListTodo } from 'lucide-vue-next'
 
-defineOptions({
-    layout: AppLayout,
-})
+defineOptions({ layout: AppLayout })
 
 const props = defineProps({
     tasks: { type: Array, default: () => [] },
@@ -212,106 +212,142 @@ function dueLabel(task) {
 <template>
     <Head title="Tasks | StuDesk" />
 
-    <div class="page">
-        <div class="page-inner">
-            <!-- Header -->
-            <header class="page-header">
-                <div>
-                    <p class="eyebrow">YOUR ACADEMIC SPACE</p>
-                    <h1>Tasks & deadlines<span class="title-period">.</span></h1>
+    <div class="min-w-0 text-[#293B32]">
+        <div class="w-full">
 
-                    <p class="subtitle">
+            <!-- Page header -->
+            <header class="mb-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+                <div>
+                    <p class="mb-2 text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                        YOUR ACADEMIC SPACE
+                    </p>
+
+                    <h1 class="font-[Georgia] text-[32px] font-medium leading-tight tracking-[-0.8px] text-[#294B3C] sm:text-[38px]">
+                        Tasks & deadlines<span class="text-[#B97962]">.</span>
+                    </h1>
+
+                    <p class="mt-2 text-[13px] leading-relaxed text-[#777D73]">
                         One thing at a time. You've got this.
                     </p>
                 </div>
 
-                <button class="primary-button new-task-button" @click="openCreateForm">
-                    <span class="plus-icon">+</span>
+                <button
+                    type="button"
+                    class="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-[#294B3C] px-5 py-2.5 text-[13px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#203D30] disabled:cursor-wait disabled:opacity-60"
+                    @click="openCreateForm"
+                >
+                    <span class="text-[19px] font-normal leading-none">+</span>
                     New task
                 </button>
             </header>
 
-            <!-- Compact overview -->
-            <section class="overview">
-                <div class="overview-intro">
-                    <span class="overview-icon">✳</span>
-                    <div>
-                        <h2>Your workload, at a glance</h2>
-                        <p>A little progress adds up.</p>
-                    </div>
-                </div>
+            <!-- Overview -->
+            <section class="mb-7 rounded-2xl border border-[#E8E5DD] bg-[#EFEEE7] p-5 sm:p-6">
+                <div class="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#DFE7D8] text-[#42614A]">
+                            <ListTodo :size="20" :strokeWidth="1.8" />
+                        </div>
 
-                <div class="overview-stats">
-                    <div class="mini-stat">
-                        <span class="stat-dot dot-neutral"></span>
                         <div>
-                            <strong>{{ tasks.length }}</strong>
-                            <span>Total</span>
+                            <h2 class="text-[14px] font-semibold text-[#354638]">
+                                Your workload, at a glance
+                            </h2>
+                            <p class="mt-1 text-[12px] text-[#82877B]">
+                                A little progress adds up.
+                            </p>
                         </div>
                     </div>
 
-                    <div class="mini-stat">
-                        <span class="stat-dot dot-peach"></span>
-                        <div>
-                            <strong>{{ pendingCount }}</strong>
-                            <span>To do</span>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-4 sm:gap-x-10">
+                        <div class="flex items-start gap-2">
+                            <span class="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#9DA397]"></span>
+                            <div>
+                                <strong class="block text-[21px] font-semibold leading-none text-[#354638]">
+                                    {{ tasks.length }}
+                                </strong>
+                                <span class="mt-1.5 block text-[11px] text-[#83877D]">Total</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="mini-stat">
-                        <span class="stat-dot dot-lavender"></span>
-                        <div>
-                            <strong>{{ inProgressCount }}</strong>
-                            <span>In progress</span>
+                        <div class="flex items-start gap-2">
+                            <span class="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#C48670]"></span>
+                            <div>
+                                <strong class="block text-[21px] font-semibold leading-none text-[#354638]">
+                                    {{ pendingCount }}
+                                </strong>
+                                <span class="mt-1.5 block text-[11px] text-[#83877D]">To do</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="mini-stat">
-                        <span class="stat-dot dot-sage"></span>
-                        <div>
-                            <strong>{{ completedCount }}</strong>
-                            <span>Completed</span>
+                        <div class="flex items-start gap-2">
+                            <span class="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#9B8DB4]"></span>
+                            <div>
+                                <strong class="block text-[21px] font-semibold leading-none text-[#354638]">
+                                    {{ inProgressCount }}
+                                </strong>
+                                <span class="mt-1.5 block text-[11px] text-[#83877D]">In progress</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2">
+                            <span class="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#668769]"></span>
+                            <div>
+                                <strong class="block text-[21px] font-semibold leading-none text-[#354638]">
+                                    {{ completedCount }}
+                                </strong>
+                                <span class="mt-1.5 block text-[11px] text-[#83877D]">Completed</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Tasks -->
-            <section class="tasks-section">
-                <div class="section-heading">
+            <!-- Task list -->
+            <section class="min-w-0">
+                <div class="mb-5 flex items-end justify-between gap-4">
                     <div>
-                        <p class="eyebrow">YOUR PLANNER</p>
-                        <h2>My tasks</h2>
-                        <p class="section-description">
+                        <p class="mb-1.5 text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                            YOUR PLANNER
+                        </p>
+
+                        <h2 class="font-[Georgia] text-[26px] font-medium tracking-[-0.4px] text-[#294B3C]">
+                            My tasks
+                        </h2>
+
+                        <p class="mt-1.5 text-[13px] text-[#777D73]">
                             Keep your next steps clear and manageable.
                         </p>
                     </div>
 
-                    <span class="result-count">
+                    <span class="shrink-0 pb-1 text-[12px] text-[#85877D]">
                         {{ filteredTasks.length }}
                         {{ filteredTasks.length === 1 ? 'task' : 'tasks' }}
                     </span>
                 </div>
 
                 <!-- Search and filters -->
-                <div class="list-controls">
-                    <div class="search-box">
-                        <span class="search-icon">⌕</span>
+                <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex min-h-[42px] w-full items-center gap-2.5 rounded-xl border border-[#E8E5DD] bg-white px-3.5 transition focus-within:border-[#A8B69F] focus-within:ring-2 focus-within:ring-[#E7EBDD] lg:max-w-[310px]">
+                        <span class="text-[19px] text-[#92968E]">⌕</span>
                         <input
                             v-model="searchQuery"
                             type="search"
                             placeholder="Search tasks or subjects..."
                             aria-label="Search tasks or subjects"
+                            class="w-full border-0 bg-transparent py-2 text-[12px] text-[#293B32] outline-none placeholder:text-[#A1A297] focus:ring-0"
                         />
                     </div>
 
-                    <div class="filter-tabs" aria-label="Filter tasks">
+                    <div class="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[#E8E5DD] bg-[#F0EEE7] p-1">
                         <button
                             v-for="filter in filters"
                             :key="filter.value"
                             type="button"
-                            class="filter-tab"
-                            :class="{ active: activeFilter === filter.value }"
+                            class="shrink-0 rounded-lg px-3 py-2 text-[11px] font-medium transition"
+                            :class="activeFilter === filter.value
+                                ? 'bg-white font-semibold text-[#294B3C] shadow-sm'
+                                : 'text-[#85877D] hover:text-[#294B3C]'"
                             @click="activeFilter = filter.value"
                         >
                             {{ filter.label }}
@@ -319,18 +355,20 @@ function dueLabel(task) {
                     </div>
                 </div>
 
-                <!-- Task list -->
-                <div v-if="filteredTasks.length" class="task-list">
+                <!-- Task cards -->
+                <div v-if="filteredTasks.length" class="grid gap-3">
                     <article
                         v-for="task in filteredTasks"
                         :key="task.id"
-                        class="task-card"
-                        :class="{ 'task-is-complete': task.status === 'completed' }"
+                        class="flex min-w-0 items-start gap-3 rounded-2xl border border-[#EAE6DD] bg-white p-4 transition hover:-translate-y-0.5 hover:border-[#D8E0D2] hover:shadow-[0_5px_18px_rgba(42,62,48,0.04)] sm:gap-4 sm:p-5"
+                        :class="{ 'bg-[#FBFBF7]': task.status === 'completed' }"
                     >
                         <button
                             type="button"
-                            class="completion"
-                            :class="{ done: task.status === 'completed' }"
+                            class="mt-1 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-[13px] transition"
+                            :class="task.status === 'completed'
+                                ? 'border-[#668769] bg-[#668769] text-white'
+                                : 'border-[#C4CBBF] bg-white text-transparent hover:border-[#668769]'"
                             :aria-label="task.status === 'completed' ? 'Mark as pending' : 'Mark as completed'"
                             :title="task.status === 'completed' ? 'Mark as pending' : 'Mark as completed'"
                             @click="toggleComplete(task)"
@@ -338,16 +376,18 @@ function dueLabel(task) {
                             <span v-if="task.status === 'completed'">✓</span>
                         </button>
 
-                        <div class="task-main">
-                            <div class="task-topline">
-                                <span class="task-type">{{ formatType(task.task_type) }}</span>
+                        <div class="min-w-0 flex-1">
+                            <div class="mb-2 flex flex-wrap items-center gap-2">
+                                <span class="text-[11px] font-semibold text-[#85877D]">
+                                    {{ formatType(task.task_type) }}
+                                </span>
 
                                 <span
-                                    class="status-pill"
+                                    class="rounded-md px-2 py-1 text-[10px] font-semibold"
                                     :class="{
-                                        'status-pending': task.status === 'pending',
-                                        'status-progress': task.status === 'in_progress',
-                                        'status-completed': task.status === 'completed',
+                                        'bg-[#F5E4DD] text-[#A85F4C]': task.status === 'pending',
+                                        'bg-[#EBE5F3] text-[#796894]': task.status === 'in_progress',
+                                        'bg-[#E7EBDD] text-[#557653]': task.status === 'completed',
                                     }"
                                 >
                                     {{
@@ -360,44 +400,60 @@ function dueLabel(task) {
                                 </span>
                             </div>
 
-                            <h3 :class="{ 'completed-title': task.status === 'completed' }">
+                            <h3
+                                class="break-words text-[14px] font-semibold leading-relaxed text-[#354638]"
+                                :class="{ 'text-[#93968D] line-through decoration-[#B5B8AE]': task.status === 'completed' }"
+                            >
                                 {{ task.title }}
                             </h3>
 
-                            <p v-if="task.description" class="task-description">
+                            <p
+                                v-if="task.description"
+                                class="mt-1.5 whitespace-pre-line break-words text-[12px] leading-relaxed text-[#85877D]"
+                            >
                                 {{ task.description }}
                             </p>
 
-                            <div class="task-meta">
-                                <span class="subject-meta">
-                                    <span class="meta-icon">▤</span>
+                            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[#85877D]">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="text-[#9A9B8E]">▤</span>
                                     {{ task.subject?.name ?? 'Personal task' }}
                                 </span>
 
                                 <span
                                     v-if="task.due_at"
-                                    class="due-meta"
-                                    :class="{ overdue: isOverdue(task) }"
+                                    class="inline-flex items-center gap-1.5"
+                                    :class="isOverdue(task) ? 'font-semibold text-[#B65E4C]' : 'text-[#A16E58]'"
                                 >
                                     <span>◷</span>
                                     {{ dueLabel(task) }}
                                 </span>
 
-                                <span v-if="task.estimated_minutes" class="time-meta">
+                                <span
+                                    v-if="task.estimated_minutes"
+                                    class="rounded-md bg-[#F0EEE7] px-2 py-1 text-[#777D73]"
+                                >
                                     {{ task.estimated_minutes }} min
                                 </span>
                             </div>
                         </div>
 
-                        <div class="task-side">
-                            <span class="priority-label" :class="`priority-${task.priority}`">
+                        <div class="flex shrink-0 flex-col items-end justify-between gap-4 self-stretch">
+                            <span
+                                class="rounded-md px-2 py-1 text-[10px] font-semibold"
+                                :class="{
+                                    'bg-[#F6E5DD] text-[#A45F4B]': task.priority === 'high',
+                                    'bg-[#F3EEDF] text-[#8B7644]': task.priority === 'medium',
+                                    'bg-[#E8EEE4] text-[#587553]': task.priority === 'low',
+                                }"
+                            >
                                 {{ task.priority }} priority
                             </span>
 
-                            <div class="task-actions">
+                            <div class="flex gap-1">
                                 <button
                                     type="button"
-                                    class="icon-action"
+                                    class="flex h-8 w-8 items-center justify-center rounded-lg text-[16px] text-[#81887C] transition hover:bg-[#EDF0E8] hover:text-[#294B3C]"
                                     title="Edit task"
                                     aria-label="Edit task"
                                     @click="openEditForm(task)"
@@ -407,7 +463,7 @@ function dueLabel(task) {
 
                                 <button
                                     type="button"
-                                    class="icon-action delete-action"
+                                    class="flex h-8 w-8 items-center justify-center rounded-lg text-[18px] text-[#81887C] transition hover:bg-[#F8E9E3] hover:text-[#A85F4C]"
                                     title="Delete task"
                                     aria-label="Delete task"
                                     @click="deleteTask(task)"
@@ -419,36 +475,61 @@ function dueLabel(task) {
                     </article>
                 </div>
 
-                <!-- Empty states -->
-                <div v-else-if="searchQuery || activeFilter !== 'all'" class="empty-state">
-                    <div class="empty-illustration">⌕</div>
-                    <h3>No matching tasks</h3>
-                    <p>Try another search or choose a different filter.</p>
+                <!-- Filtered empty state -->
+                <div
+                    v-else-if="searchQuery || activeFilter !== 'all'"
+                    class="rounded-2xl border border-dashed border-[#DFDFD4] bg-white/60 px-5 py-12 text-center"
+                >
+                    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E7EBDD] text-[23px] text-[#557653]">
+                        ⌕
+                    </div>
+
+                    <h3 class="font-[Georgia] text-[21px] font-medium text-[#294B3C]">
+                        No matching tasks
+                    </h3>
+
+                    <p class="mx-auto mt-2 max-w-[310px] text-[13px] leading-relaxed text-[#85877D]">
+                        Try another search or choose a different filter.
+                    </p>
 
                     <button
-                        class="secondary-button"
                         type="button"
+                        class="mt-5 rounded-xl border border-[#E4E3DA] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#4A5D4E] transition hover:bg-[#F0F0E8]"
                         @click="searchQuery = ''; activeFilter = 'all'"
                     >
                         Clear filters
                     </button>
                 </div>
 
-                <div v-else class="empty-state">
-                    <div class="empty-illustration">✳</div>
-                    <h3>A little space to begin</h3>
-                    <p>
+                <!-- First-time empty state -->
+                <div
+                    v-else
+                    class="rounded-2xl border border-dashed border-[#DFDFD4] bg-white/60 px-5 py-12 text-center"
+                >
+                    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E7EBDD] text-[22px] text-[#557653]">
+                        ✳
+                    </div>
+
+                    <h3 class="font-[Georgia] text-[21px] font-medium text-[#294B3C]">
+                        A little space to begin
+                    </h3>
+
+                    <p class="mx-auto mt-2 max-w-[330px] text-[13px] leading-relaxed text-[#85877D]">
                         Add your first assignment, exam, or study session.
                         You can organize the rest as you go.
                     </p>
 
-                    <button class="primary-button" type="button" @click="openCreateForm">
-                        <span class="plus-icon">+</span>
+                    <button
+                        type="button"
+                        class="mt-5 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-[#294B3C] px-5 py-2.5 text-[12px] font-semibold text-white transition hover:bg-[#203D30]"
+                        @click="openCreateForm"
+                    >
+                        <span class="text-[18px] font-normal">+</span>
                         Create your first task
                     </button>
                 </div>
 
-                <p class="list-footer">
+                <p class="mt-6 text-center font-[Georgia] text-[12px] italic text-[#A0A194]">
                     Small steps are still progress.
                 </p>
             </section>
@@ -458,30 +539,34 @@ function dueLabel(task) {
         <Transition name="modal">
             <div
                 v-if="showForm"
-                class="modal-overlay"
+                class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#222F26]/45 p-3 backdrop-blur-[4px] sm:p-6"
                 @click.self="resetForm"
                 @keydown.esc="resetForm"
             >
                 <section
-                    class="task-modal"
+                    class="my-auto max-h-[calc(100vh-24px)] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-white/60 bg-[#FFFEFA] shadow-[0_24px_80px_rgba(28,43,33,0.18)] sm:max-h-[calc(100vh-48px)] sm:rounded-[20px]"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="modal-title"
                 >
-                    <header class="modal-header">
+                    <header class="flex items-start justify-between gap-5 border-b border-[#EEECE4] px-5 py-5 sm:px-7 sm:py-6">
                         <div>
-                            <p class="eyebrow">{{ editingId ? 'UPDATE YOUR PLAN' : 'MAKE A PLAN' }}</p>
-                            <h2 id="modal-title">
+                            <p class="mb-2 text-xs font-medium font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                                {{ editingId ? 'UPDATE YOUR PLAN' : 'MAKE A PLAN' }}
+                            </p>
+
+                            <h2 id="modal-title" class="font-[Georgia] text-[25px] font-medium text-[#294B3C] sm:text-[27px]">
                                 {{ editingId ? 'Edit task' : 'Create a task' }}
                             </h2>
-                            <p>
+
+                            <p class="mt-2 text-[12px] leading-relaxed text-[#85877D]">
                                 Add the details now. You can always adjust them later.
                             </p>
                         </div>
 
                         <button
                             type="button"
-                            class="close-button"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E9E7DE] bg-[#F8F7F2] text-[22px] text-[#6C796C] transition hover:bg-[#EEEE E5]"
                             aria-label="Close form"
                             @click="resetForm"
                         >
@@ -489,22 +574,23 @@ function dueLabel(task) {
                         </button>
                     </header>
 
-                    <form class="task-form" @submit.prevent="saveTask">
-                        <label>
-                            Task title <span class="required">*</span>
+                    <form class="space-y-4 px-5 py-5 sm:px-7 sm:py-6" @submit.prevent="saveTask">
+                        <label class="block text-[12px] font-semibold text-[#48584A]">
+                            Task title <span class="text-[#B56E58]">*</span>
                             <input
                                 v-model="form.title"
                                 type="text"
                                 placeholder="e.g. Finish database project"
                                 required
                                 autofocus
+                                class="form-field"
                             />
-                            <small v-if="form.errors.title" class="error">{{ form.errors.title }}</small>
+                            <small v-if="form.errors.title" class="form-error">{{ form.errors.title }}</small>
                         </label>
 
-                        <label>
+                        <label class="block text-[12px] font-semibold text-[#48584A]">
                             Subject
-                            <select v-model="form.subject_id">
+                            <select v-model="form.subject_id" class="form-field">
                                 <option value="">Personal / no subject</option>
                                 <option
                                     v-for="subject in subjects"
@@ -514,79 +600,83 @@ function dueLabel(task) {
                                     {{ subject.name }}
                                 </option>
                             </select>
-                            <small v-if="form.errors.subject_id" class="error">{{ form.errors.subject_id }}</small>
+                            <small v-if="form.errors.subject_id" class="form-error">{{ form.errors.subject_id }}</small>
                         </label>
 
-                        <label>
-                            Description <span class="optional">(optional)</span>
+                        <label class="block text-[12px] font-semibold text-[#48584A]">
+                            Description <span class="font-normal text-[#9B9C91]">(optional)</span>
                             <textarea
                                 v-model="form.description"
-                                rows="2"
+                                rows="3"
                                 placeholder="Notes, instructions, or things to remember..."
+                                class="form-field resize-y leading-relaxed"
                             ></textarea>
-                            <small v-if="form.errors.description" class="error">{{ form.errors.description }}</small>
+                            <small v-if="form.errors.description" class="form-error">{{ form.errors.description }}</small>
                         </label>
 
-                        <div class="form-row">
-                            <label>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <label class="block text-[12px] font-semibold text-[#48584A]">
                                 Task type
-                                <select v-model="form.task_type" required>
+                                <select v-model="form.task_type" required class="form-field">
                                     <option value="assignment">Assignment</option>
                                     <option value="project">Project</option>
                                     <option value="exam">Exam</option>
                                     <option value="quiz">Quiz</option>
                                     <option value="study">Study session</option>
                                 </select>
-                                <small v-if="form.errors.task_type" class="error">{{ form.errors.task_type }}</small>
+                                <small v-if="form.errors.task_type" class="form-error">{{ form.errors.task_type }}</small>
                             </label>
 
-                            <label>
+                            <label class="block text-[12px] font-semibold text-[#48584A]">
                                 Priority
-                                <select v-model="form.priority" required>
+                                <select v-model="form.priority" required class="form-field">
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
                                     <option value="high">High</option>
                                 </select>
-                                <small v-if="form.errors.priority" class="error">{{ form.errors.priority }}</small>
+                                <small v-if="form.errors.priority" class="form-error">{{ form.errors.priority }}</small>
                             </label>
                         </div>
 
-                        <div class="form-row">
-                            <label>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <label class="block text-[12px] font-semibold text-[#48584A]">
                                 Due date & time
-                                <input v-model="form.due_at" type="datetime-local" />
-                                <small v-if="form.errors.due_at" class="error">{{ form.errors.due_at }}</small>
+                                <input v-model="form.due_at" type="datetime-local" class="form-field" />
+                                <small v-if="form.errors.due_at" class="form-error">{{ form.errors.due_at }}</small>
                             </label>
 
-                            <label>
+                            <label class="block text-[12px] font-semibold text-[#48584A]">
                                 Estimated time
-                                <div class="input-with-suffix">
+                                <div class="relative">
                                     <input
                                         v-model="form.estimated_minutes"
                                         type="number"
                                         min="1"
                                         placeholder="e.g. 60"
+                                        class="form-field pr-12"
                                     />
-                                    <span>min</span>
+                                    <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-normal text-[#8D9186]">
+                                        min
+                                    </span>
                                 </div>
-                                <small v-if="form.errors.estimated_minutes" class="error">{{ form.errors.estimated_minutes }}</small>
+                                <small v-if="form.errors.estimated_minutes" class="form-error">{{ form.errors.estimated_minutes }}</small>
                             </label>
                         </div>
 
-                        <label>
+                        <label class="block text-[12px] font-semibold text-[#48584A]">
                             Status
-                            <select v-model="form.status" required>
+                            <select v-model="form.status" required class="form-field">
                                 <option value="pending">To do</option>
                                 <option value="in_progress">In progress</option>
                                 <option value="completed">Completed</option>
                             </select>
-                            <small v-if="form.errors.status" class="error">{{ form.errors.status }}</small>
+                            <small v-if="form.errors.status" class="form-error">{{ form.errors.status }}</small>
                         </label>
 
-                        <div class="modal-actions">
+                        <div class="flex flex-col-reverse justify-end gap-2 border-t border-[#EEECE4] pt-5 sm:flex-row">
                             <button
-                                class="secondary-button"
                                 type="button"
+                                class="min-h-[42px] rounded-xl border border-[#E4E3DA] bg-white px-5 py-2.5 text-[12px] font-semibold text-[#4A5D4E] transition hover:bg-[#F0F0E8] disabled:opacity-60"
                                 :disabled="form.processing"
                                 @click="resetForm"
                             >
@@ -594,8 +684,8 @@ function dueLabel(task) {
                             </button>
 
                             <button
-                                class="primary-button"
                                 type="submit"
+                                class="min-h-[42px] rounded-xl bg-[#294B3C] px-5 py-2.5 text-[12px] font-semibold text-white transition hover:bg-[#203D30] disabled:cursor-wait disabled:opacity-60"
                                 :disabled="form.processing"
                             >
                                 {{
@@ -615,785 +705,49 @@ function dueLabel(task) {
 </template>
 
 <style scoped>
-:global(body) {
-    margin: 0;
-    background: #f8f7f2;
-}
-
-.page {
-    min-height: 100vh;
-    padding: 36px 24px 48px;
-    color: #2c4034;
-    background: #f8f7f2;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.page-inner {
-    width: 100%;
-    max-width: 1060px;
-    margin: 0 auto;
-}
-
-.page-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 28px;
-}
-
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #8a9385;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.7px;
-}
-
-h1,
-h2,
-h3,
-p {
-    overflow-wrap: anywhere;
-}
-
-h1 {
-    margin: 0;
-    color: #2b4033;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(30px, 4vw, 40px);
-    font-weight: 500;
-    letter-spacing: -1.1px;
-    line-height: 1.2;
-}
-
-.title-period {
-    color: #bb806a;
-}
-
-.subtitle {
-    margin: 10px 0 0;
-    color: #81867c;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.primary-button,
-.secondary-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    min-height: 42px;
-    padding: 0 17px;
-    border: 1px solid transparent;
-    border-radius: 11px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 650;
-    cursor: pointer;
-    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
-}
-
-.primary-button {
-    background: #294b3c;
-    color: #fffefa;
-}
-
-.primary-button:hover:not(:disabled) {
-    background: #203d30;
-    transform: translateY(-1px);
-}
-
-.primary-button:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-.secondary-button {
-    border-color: #e4e3da;
-    background: #fffefa;
-    color: #4a5d4e;
-}
-
-.secondary-button:hover:not(:disabled) {
-    background: #f0f0e8;
-}
-
-.secondary-button:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-.plus-icon {
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 1;
-}
-
-.new-task-button {
-    flex-shrink: 0;
-    margin-bottom: 2px;
-}
-
-/* Overview */
-
-.overview {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 34px;
-    padding: 21px 24px;
-    border: 1px solid #e8e8de;
-    border-radius: 17px;
-    background: #efefe6;
-}
-
-.overview-intro {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    min-width: 190px;
-}
-
-.overview-icon {
-    display: grid;
-    width: 39px;
-    height: 39px;
-    flex-shrink: 0;
-    place-items: center;
-    border-radius: 13px;
-    background: #dfe7d8;
-    color: #42614a;
-    font-size: 19px;
-}
-
-.overview-intro h2 {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.overview-intro p {
-    margin: 5px 0 0;
-    color: #82877b;
-    font-size: 11px;
-}
-
-.overview-stats {
-    display: flex;
-    align-items: center;
-    gap: clamp(14px, 3vw, 32px);
-}
-
-.mini-stat {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.stat-dot {
-    width: 7px;
-    height: 7px;
-    margin-top: 6px;
-    flex-shrink: 0;
-    border-radius: 50%;
-}
-
-.dot-neutral { background: #9da397; }
-.dot-peach { background: #c48670; }
-.dot-lavender { background: #9b8db4; }
-.dot-sage { background: #668769; }
-
-.mini-stat strong,
-.mini-stat div > span {
-    display: block;
-}
-
-.mini-stat strong {
-    font-size: 19px;
-    font-weight: 650;
-    line-height: 1.1;
-}
-
-.mini-stat div > span {
-    margin-top: 5px;
-    color: #83877d;
-    font-size: 10px;
-}
-
-/* Task section */
-
-.tasks-section {
-    min-width: 0;
-}
-
-.section-heading {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 19px;
-}
-
-.section-heading .eyebrow {
-    margin-bottom: 5px;
-}
-
-.section-heading h2 {
-    margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 27px;
-    font-weight: 500;
-    letter-spacing: -0.5px;
-}
-
-.section-description {
-    margin: 6px 0 0;
-    color: #888b81;
-    font-size: 12px;
-    line-height: 1.6;
-}
-
-.result-count {
-    flex-shrink: 0;
-    padding-bottom: 3px;
-    color: #8b8e84;
-    font-size: 11px;
-}
-
-/* Search and filters */
-
-.list-controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 15px;
-}
-
-.search-box {
-    display: flex;
-    align-items: center;
-    width: min(100%, 280px);
-    min-height: 40px;
-    padding: 0 12px;
-    border: 1px solid #e7e5dc;
-    border-radius: 10px;
-    background: #fffefa;
-    transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.search-box:focus-within {
-    border-color: #9cac97;
-    box-shadow: 0 0 0 3px rgb(224 232 218 / 65%);
-}
-
-.search-icon {
-    margin-right: 8px;
-    color: #8a9385;
-    font-size: 21px;
-}
-
-.search-box input {
-    width: 100%;
-    min-width: 0;
-    padding: 10px 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: #2c4034;
-    font: inherit;
-    font-size: 11px;
-}
-
-.search-box input::placeholder {
-    color: #a1a297;
-}
-
-.filter-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px;
-    border: 1px solid #e9e6de;
-    border-radius: 11px;
-    background: #f0efe9;
-}
-
-.filter-tab {
-    padding: 8px 11px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #82867c;
-    font: inherit;
-    font-size: 10px;
-    cursor: pointer;
-    transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
-}
-
-.filter-tab:hover {
-    color: #344b3b;
-}
-
-.filter-tab.active {
-    background: #fffefa;
-    color: #294b3c;
-    font-weight: 700;
-    box-shadow: 0 1px 3px rgb(39 58 48 / 6%);
-}
-
-/* Task cards */
-
-.task-list {
-    display: grid;
-    gap: 9px;
-}
-
-.task-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 13px;
-    min-width: 0;
-    padding: 17px 18px;
-    border: 1px solid #eae8df;
-    border-radius: 14px;
-    background: #fffefa;
-    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.task-card:hover {
-    border-color: #d8e0d2;
-    box-shadow: 0 5px 18px rgb(42 62 48 / 4%);
-    transform: translateY(-1px);
-}
-
-.task-is-complete {
-    background: #fbfbf7;
-}
-
-.completion {
-    display: grid;
-    width: 21px;
-    height: 21px;
-    flex: 0 0 21px;
-    margin-top: 2px;
-    padding: 0;
-    place-items: center;
-    border: 1.5px solid #c4cbbf;
-    border-radius: 7px;
-    background: #fffefa;
-    color: #fffefa;
-    font-size: 13px;
-    cursor: pointer;
-    transition: border-color 180ms ease, background 180ms ease;
-}
-
-.completion:hover {
-    border-color: #668769;
-}
-
-.completion.done {
-    border-color: #668769;
-    background: #668769;
-}
-
-.task-main {
-    flex: 1;
-    min-width: 0;
-}
-
-.task-topline {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-bottom: 7px;
-}
-
-.task-type {
-    color: #8b8e82;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 7px;
-    border-radius: 6px;
-    font-size: 9px;
-    font-weight: 650;
-}
-
-.status-pending {
-    background: #f6e9e1;
-    color: #a36b55;
-}
-
-.status-progress {
-    background: #eee9f5;
-    color: #7e6a9b;
-}
-
-.status-completed {
-    background: #e7eee2;
-    color: #557653;
-}
-
-.task-main h3 {
-    margin: 0;
-    color: #354638;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.55;
-}
-
-.task-main h3.completed-title {
-    color: #93968d;
-    text-decoration: line-through;
-    text-decoration-color: #b5b8ae;
-}
-
-.task-description {
-    margin: 5px 0 0;
-    color: #8a8d83;
-    font-size: 11px;
-    line-height: 1.6;
-    white-space: pre-line;
-}
-
-.task-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 15px;
-    margin-top: 11px;
-}
-
-.subject-meta,
-.due-meta,
-.time-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: #83877c;
-    font-size: 10px;
-    line-height: 1.5;
-}
-
-.meta-icon {
-    color: #9a9b8e;
-}
-
-.due-meta {
-    color: #a16e58;
-}
-
-.due-meta.overdue {
-    color: #b65e4c;
-    font-weight: 700;
-}
-
-.time-meta {
-    padding: 3px 6px;
-    border-radius: 5px;
-    background: #f1f0e9;
-    color: #777d72;
-}
-
-.task-side {
-    display: flex;
-    flex: 0 0 auto;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: space-between;
-    align-self: stretch;
-    gap: 15px;
-}
-
-.priority-label {
-    padding: 5px 7px;
-    border-radius: 6px;
-    background: #f1f0e9;
-    color: #777d72;
-    font-size: 9px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.priority-high {
-    background: #f6e5dd;
-    color: #a45f4b;
-}
-
-.priority-medium {
-    background: #f3eedf;
-    color: #8b7644;
-}
-
-.priority-low {
-    background: #e8eee4;
-    color: #587553;
-}
-
-.task-actions {
-    display: flex;
-    gap: 5px;
-}
-
-.icon-action {
-    display: grid;
-    width: 29px;
-    height: 29px;
-    place-items: center;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    background: transparent;
-    color: #81887c;
-    font-family: inherit;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 180ms ease, color 180ms ease;
-}
-
-.icon-action:hover {
-    background: #edf0e8;
-    color: #294b3c;
-}
-
-.delete-action:hover {
-    background: #f8e9e3;
-    color: #a85f4c;
-}
-
-/* Empty state */
-
-.empty-state {
-    padding: 48px 20px;
-    border: 1px dashed #dfdfd4;
-    border-radius: 15px;
-    background: rgb(255 254 250 / 60%);
-    text-align: center;
-}
-
-.empty-illustration {
-    display: grid;
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 15px;
-    place-items: center;
-    border-radius: 16px;
-    background: #e7eee2;
-    color: #557653;
-    font-size: 22px;
-}
-
-.empty-state h3 {
-    margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 21px;
-    font-weight: 500;
-}
-
-.empty-state p {
-    max-width: 310px;
-    margin: 8px auto 18px;
-    color: #888b81;
-    font-size: 12px;
-    line-height: 1.7;
-}
-
-.list-footer {
-    margin: 19px 0 0;
-    color: #a0a194;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 12px;
-    font-style: italic;
-    text-align: center;
-}
-
-/* Modal */
-
-.modal-overlay {
-    position: fixed;
-    z-index: 100;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow-y: auto;
-    padding: 24px;
-    background: rgb(34 47 38 / 42%);
-    backdrop-filter: blur(4px);
-}
-
-.task-modal {
-    width: 100%;
-    max-width: 560px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    border: 1px solid rgb(255 255 255 / 65%);
-    border-radius: 20px;
-    background: #fffefa;
-    box-shadow: 0 24px 80px rgb(28 43 33 / 18%);
-}
-
-.modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 25px 27px 20px;
-    border-bottom: 1px solid #eeece4;
-}
-
-.modal-header h2 {
-    margin: 0;
-    color: #2c4034;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 27px;
-    font-weight: 500;
-}
-
-.modal-header p:last-child {
-    margin: 7px 0 0;
-    color: #888b81;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.close-button {
-    display: grid;
-    width: 33px;
-    height: 33px;
-    flex: 0 0 33px;
-    place-items: center;
-    border: 1px solid #e9e7de;
-    border-radius: 10px;
-    background: #f8f7f2;
-    color: #6c796c;
-    font-family: inherit;
-    font-size: 23px;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 180ms ease;
-}
-
-.close-button:hover {
-    background: #eeeee5;
-}
-
-.task-form {
-    padding: 22px 27px 27px;
-}
-
-.task-form label {
-    display: block;
-    min-width: 0;
-    margin-bottom: 17px;
-    color: #48584a;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.required {
-    color: #b56e58;
-}
-
-.optional {
-    color: #9b9c91;
-    font-size: 10px;
-    font-weight: 400;
-}
-
-.task-form input,
-.task-form select,
-.task-form textarea {
+.form-field {
     box-sizing: border-box;
     display: block;
     width: 100%;
     min-width: 0;
     margin-top: 7px;
     padding: 11px 12px;
-    border: 1px solid #e4e3d9;
+    border: 1px solid #E4E3D9;
     border-radius: 9px;
     outline: none;
-    background: #fff;
-    color: #2c4034;
+    background: #FFFFFF;
+    color: #293B32;
     font-family: inherit;
     font-size: 12px;
     font-weight: 400;
     transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.task-form textarea {
-    resize: vertical;
-    line-height: 1.6;
-}
-
-.task-form input:focus,
-.task-form select:focus,
-.task-form textarea:focus {
-    border-color: #94a68f;
+.form-field:focus {
+    border-color: #94A68F;
     box-shadow: 0 0 0 3px rgb(224 232 218 / 75%);
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 14px;
+.form-field::placeholder {
+    color: #A1A297;
 }
 
-.input-with-suffix {
-    position: relative;
-}
-
-.input-with-suffix input {
-    padding-right: 42px;
-}
-
-.input-with-suffix > span {
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    color: #8d9186;
-    font-size: 10px;
-    font-weight: 400;
-    transform: translateY(-35%);
-    pointer-events: none;
-}
-
-.error {
+.form-error {
     display: block;
     margin-top: 5px;
-    color: #b15e4b;
-    font-size: 10px;
+    color: #B15E4B;
+    font-size: 11px;
     font-weight: 500;
     line-height: 1.5;
 }
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 9px;
-    margin-top: 24px;
-    padding-top: 18px;
-    border-top: 1px solid #eeece4;
-}
-
-/* Subtle motion */
 
 .modal-enter-active,
 .modal-leave-active {
     transition: opacity 180ms ease;
 }
 
-.modal-enter-active .task-modal,
-.modal-leave-active .task-modal {
+.modal-enter-active section,
+.modal-leave-active section {
     transition: transform 180ms ease, opacity 180ms ease;
 }
 
@@ -1402,146 +756,19 @@ h1 {
     opacity: 0;
 }
 
-.modal-enter-from .task-modal,
-.modal-leave-to .task-modal {
+.modal-enter-from section,
+.modal-leave-to section {
     opacity: 0;
     transform: translateY(8px) scale(0.99);
-}
-
-/* Responsive layout */
-
-@media (max-width: 800px) {
-    .page {
-        padding: 25px 18px 38px;
-    }
-
-    .overview {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 22px;
-    }
-
-    .overview-stats {
-        display: grid;
-        width: 100%;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-    }
-
-    .list-controls {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .search-box {
-        width: auto;
-    }
-
-    .filter-tabs {
-        align-self: flex-start;
-        max-width: 100%;
-        overflow-x: auto;
-    }
-}
-
-@media (max-width: 520px) {
-    .page {
-        padding: 20px 14px 32px;
-    }
-
-    .page-header {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .back-link {
-        margin-bottom: 20px;
-    }
-
-    .new-task-button {
-        width: 100%;
-    }
-
-    .overview {
-        padding: 18px;
-    }
-
-    .overview-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        row-gap: 20px;
-    }
-
-    .section-heading h2 {
-        font-size: 25px;
-    }
-
-    .filter-tabs {
-        align-self: stretch;
-        justify-content: space-between;
-    }
-
-    .filter-tab {
-        flex: 1 0 auto;
-        padding: 8px;
-    }
-
-    .task-card {
-        gap: 10px;
-        padding: 14px 12px;
-    }
-
-    .task-side {
-        gap: 12px;
-    }
-
-    .priority-label {
-        max-width: 75px;
-        white-space: normal;
-        text-align: center;
-    }
-
-    .task-meta {
-        gap: 7px 11px;
-    }
-
-    .modal-overlay {
-        align-items: flex-end;
-        padding: 10px;
-    }
-
-    .task-modal {
-        max-height: calc(100dvh - 20px);
-        border-radius: 18px;
-    }
-
-    .modal-header {
-        padding: 21px 19px 17px;
-    }
-
-    .task-form {
-        padding: 19px;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-
-    .modal-actions {
-        position: sticky;
-        bottom: 0;
-        background: #fffefa;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
+        transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
     }
 }
 </style>

@@ -79,19 +79,16 @@ public function index()
             'transaction_date',
         ]);
 
-    $unplannedCategories = $monthlyExpenses
-        ->groupBy(fn ($transaction) =>
-            trim($transaction->category ?: 'Uncategorized')
-        )
-        ->reject(fn ($transactions, $category) =>
-            in_array(mb_strtolower(trim($category)), $activeCategories, true)
-        )
-        ->map(fn ($transactions, $category) => [
-            'category' => $category,
-            'spent' => (float) $transactions->sum('amount'),
-            'transactions' => $transactions->values(),
-        ])
-        ->values();
+$unplannedCategories = $monthlyExpenses
+    ->groupBy(fn ($transaction) =>
+        trim($transaction->category ?: 'Uncategorized')
+    )
+    ->map(fn ($transactions, $category) => [
+        'category' => $category,
+        'spent' => (float) $transactions->sum('amount'),
+        'transactions' => $transactions->values(),
+    ])
+    ->values();
 
     return Inertia::render('Budgets/Index', [
         'budgets' => $budgets,

@@ -8,9 +8,52 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use App\Models\Bill;
+use App\Models\SavingsGoal;
 
 class TransactionController extends Controller
 {
+
+    public function quickAddOptions(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        return response()->json([
+            'budgets' => \App\Models\Budget::where('user_id', $userId)
+                ->orderBy('name')
+                ->get([
+                    'id',
+                    'name',
+                    'category',
+                    'start_date',
+                    'end_date',
+                ]),
+
+            'bills' => Bill::where('user_id', $userId)
+                ->whereIn('status', ['pending', 'overdue'])
+                ->orderBy('due_date')
+                ->get([
+                    'id',
+                    'title',
+                    'category',
+                    'amount',
+                    'due_date',
+                    'status',
+                ]),
+
+            'savingsGoals' => SavingsGoal::where('user_id', $userId)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get([
+                    'id',
+                    'name',
+                    'target_amount',
+                    'current_amount',
+                    'status',
+                ]),
+        ]);
+    }
+    
     public function index()
     {
         $user = auth()->user();
@@ -66,6 +109,32 @@ class TransactionController extends Controller
             'budgets' => $budgets,
         ]);
     }
+
+    public function edit(Request $request, string $id)
+{
+    // Only allow the user to edit their own transaction.
+    $transaction = $request->user()
+        ->transactions()
+        ->findOrFail($id);
+
+    // Retrieve the user's budgets for the edit form.
+    $budgets = $request->user()
+        ->budgets()
+        ->orderBy('name')
+        ->get([
+            'id',
+            'name',
+            'category',
+            'amount',
+            'start_date',
+            'end_date',
+        ]);
+
+    return Inertia::render('Transactions/Edit', [
+        'transaction' => $transaction,
+        'budgets' => $budgets,
+    ]);
+}
 
     public function store(Request $request)
     {

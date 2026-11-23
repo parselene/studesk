@@ -15,10 +15,8 @@ import {
     ArrowRight,
     UserRound,
     Sparkles,
-    GraduationCap,
     Clock,
     PiggyBank,
-    Pencil,
 } from 'lucide-vue-next'
 
 defineOptions({
@@ -28,32 +26,6 @@ defineOptions({
 const page = usePage()
 
 const userName = computed(() => page.props.auth?.user?.name || 'Student')
-
-const currentPath = computed(() => {
-    if (typeof window === 'undefined') return '/dashboard'
-    return window.location.pathname.replace(/\/$/, '') || '/dashboard'
-})
-
-
-
-function isActive(path) {
-    if (path === '/dashboard') {
-        return currentPath.value === '/dashboard'
-    }
-
-    return currentPath.value === path ||
-        currentPath.value.startsWith(path + '/')
-}
-
-
-
-const navClass = (path) => [
-    'flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition duration-200',
-    isActive(path)
-        ? 'bg-white/15 font-medium text-white shadow-sm'
-        : 'text-white/70 hover:bg-white/10 hover:text-white',
-]
-
 
 const statsData = computed(() => page.props.statsData ?? {
     availableBalance: '0.00',
@@ -102,7 +74,6 @@ const stats = computed(() => [
 
 const events = computed(() => page.props.events ?? [])
 
-
 const actions = [
     {
         icon: CircleDollarSign,
@@ -133,25 +104,28 @@ const actions = [
         tone: 'lavender',
     },
 ]
+
+const toneClasses = {
+    sage: 'bg-[#E4EBDD] text-[#42654B]',
+    peach: 'bg-[#F5E4DD] text-[#A85F4C]',
+    lavender: 'bg-[#EBE5F3] text-[#796894]',
+    butter: 'bg-[#F3ECD9] text-[#8E7846]',
+}
 </script>
 
 <template>
     <Head title="Dashboard | StuDesk" />
 
-    <main class="min-w-0 pb-6">
+    <main class="page-shell min-w-0 pb-6">
 
-        <!-- Welcome header -->
-        <header class="flex flex-wrap items-center justify-between gap-4">
+        <!-- Page Header -->
+        <header class="page-header">
             <div>
-                <p
-                    class="text-xs font-medium uppercase tracking-[0.17em] text-[#8B8C7D]"
-                >
+                <p class="text-xs font-medium uppercase tracking-[0.17em] text-[#8B8C7D]">
                     YOUR PERSONAL SPACE
                 </p>
 
-                <h1
-                    class="mt-2 text-2xl font-semibold tracking-tight text-[#293B32] sm:text-3xl"
-                >
+                <h1 class="mt-2 font-heading text-3xl font-normal tracking-tight text-[#293B32] sm:text-4xl">
                     Hey, {{ userName }}
                     <Sparkles
                         :size="19"
@@ -175,7 +149,6 @@ const actions = [
                     </p>
                 </div>
 
-                <!-- Account / edit profile link -->
                 <Link
                     href="/profile"
                     aria-label="Edit account"
@@ -187,37 +160,23 @@ const actions = [
             </div>
         </header>
 
-        <!-- Welcome banner -->
-        <section
-            class="relative mt-8 overflow-hidden rounded-[26px] bg-[#E7EBDD] p-6 sm:p-8 lg:p-9"
-        >
-            <div
-                class="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full border-[30px] border-white/25"
-            ></div>
+        <!-- Welcome Banner -->
+        <section class="relative overflow-hidden rounded-[26px] bg-[#E7EBDD] p-6 sm:p-8 lg:p-9">
+            <div class="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full border-[30px] border-white/25"></div>
 
-            <div
-                class="pointer-events-none absolute right-28 top-28 h-16 w-16 rounded-full bg-[#D1DCC8]/60"
-            ></div>
+            <div class="pointer-events-none absolute right-28 top-28 h-16 w-16 rounded-full bg-[#D1DCC8]/60"></div>
 
             <div class="relative max-w-xl">
-                <span
-                    class="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#496550]"
-                >
-                    <span
-                        class="h-1.5 w-1.5 rounded-full bg-[#71916F]"
-                    ></span>
+                <span class="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#496550]">
+                    <span class="h-1.5 w-1.5 rounded-full bg-[#71916F]"></span>
                     Your fresh start
                 </span>
 
-                <h2
-                    class="mt-5 max-w-lg text-2xl font-semibold leading-tight tracking-tight text-[#294B3C] sm:text-3xl lg:text-[36px]"
-                >
+                <h2 class="mt-5 max-w-lg font-heading text-3xl font-normal leading-tight tracking-tight text-[#294B3C] sm:text-4xl lg:text-[42px]">
                     Make room for what matters.
                 </h2>
 
-                <p
-                    class="mt-3 max-w-md text-sm leading-6 text-[#637361]"
-                >
+                <p class="mt-3 max-w-md text-sm leading-6 text-[#637361]">
                     Keep track of your school deadlines and spending without
                     juggling different planners.
                 </p>
@@ -242,24 +201,18 @@ const actions = [
             </div>
         </section>
 
-        <!-- Overview cards -->
-        <section class="mt-8">
-            <div class="mb-4 flex items-end justify-between gap-3">
-                <div>
-                    <h2 class="text-lg font-semibold text-[#293B32]">
-                        Your overview
-                    </h2>
-                    <p class="mt-1 text-sm text-[#85877D]">
-                        A quick look at your priorities.
-                    </p>
-                </div>
-
-
+        <!-- Overview -->
+        <section class="mt-7">
+            <div class="mb-4">
+                <h2 class="font-heading text-xl font-normal text-[#293B32]">
+                    Your overview
+                </h2>
+                <p class="mt-1 text-sm text-[#85877D]">
+                    A quick look at your priorities.
+                </p>
             </div>
 
-            <div
-                class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
-            >
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <article
                     v-for="item in stats"
                     :key="item.label"
@@ -272,16 +225,7 @@ const actions = [
 
                         <span
                             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                            :class="{
-                                'bg-[#E4EBDD] text-[#42654B]':
-                                    item.tone === 'sage',
-                                'bg-[#F5E4DD] text-[#B36F5B]':
-                                    item.tone === 'peach',
-                                'bg-[#EBE5F3] text-[#796894]':
-                                    item.tone === 'lavender',
-                                'bg-[#F3ECD9] text-[#8E7846]':
-                                    item.tone === 'butter',
-                            }"
+                            :class="toneClasses[item.tone]"
                         >
                             <component
                                 :is="item.icon"
@@ -291,9 +235,7 @@ const actions = [
                         </span>
                     </div>
 
-                    <p
-                        class="mt-5 text-[23px] font-semibold tracking-tight text-[#293B32]"
-                    >
+                    <p class="mt-5 font-heading text-2xl font-normal tracking-tight text-[#293B32]">
                         {{ item.value }}
                     </p>
 
@@ -304,17 +246,14 @@ const actions = [
             </div>
         </section>
 
-        <!-- Upcoming events and shortcuts -->
-        <section
-            class="mt-8 grid grid-cols-1 items-start gap-5 xl:grid-cols-[1.35fr_0.85fr]"
-        >
-            <!-- Coming up -->
-            <div
-                class="rounded-2xl border border-[#EAE6DD] bg-white p-5 sm:p-6"
-            >
+        <!-- Upcoming Events and Quick Actions -->
+        <section class="mt-7 grid grid-cols-1 items-start gap-5 xl:grid-cols-[1.35fr_0.85fr]">
+
+            <!-- Coming Up -->
+            <div class="rounded-2xl border border-[#EAE6DD] bg-white p-5 sm:p-6">
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <h2 class="text-lg font-semibold text-[#293B32]">
+                        <h2 class="font-heading text-xl font-normal text-[#293B32]">
                             Coming up
                         </h2>
                         <p class="mt-1 text-sm text-[#85877D]">
@@ -324,14 +263,14 @@ const actions = [
 
                     <Link
                         href="/calendar"
-                        class="inline-flex items-center gap-1 text-xs font-semibold text-[#42654B] hover:underline"
+                        class="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#42654B] hover:underline"
                     >
                         Full calendar
                         <ArrowRight :size="14" />
                     </Link>
                 </div>
 
-                <div class="mt-5 space-y-2">
+                <div v-if="events.length" class="mt-5 space-y-2">
                     <article
                         v-for="event in events"
                         :key="event.id"
@@ -339,18 +278,9 @@ const actions = [
                     >
                         <div
                             class="flex h-[58px] w-[55px] shrink-0 flex-col items-center justify-center rounded-xl"
-                            :class="{
-                                'bg-[#F5E4DD] text-[#A85F4C]':
-                                    event.tone === 'peach',
-                                'bg-[#E4EBDD] text-[#42654B]':
-                                    event.tone === 'sage',
-                                'bg-[#EBE5F3] text-[#796894]':
-                                    event.tone === 'lavender',
-                            }"
+                            :class="toneClasses[event.tone] || toneClasses.sage"
                         >
-                            <span
-                                class="text-[10px] font-semibold tracking-widest"
-                            >
+                            <span class="text-[10px] font-semibold tracking-widest">
                                 {{ event.month }}
                             </span>
                             <span class="mt-0.5 text-xl font-semibold">
@@ -359,9 +289,7 @@ const actions = [
                         </div>
 
                         <div class="min-w-0 flex-1">
-                            <h3
-                                class="truncate text-sm font-semibold text-[#354638]"
-                            >
+                            <h3 class="truncate text-sm font-semibold text-[#354638]">
                                 {{ event.title }}
                             </h3>
                             <p class="mt-1 text-xs text-[#85877D]">
@@ -371,36 +299,39 @@ const actions = [
 
                         <span
                             class="hidden rounded-full px-3 py-1.5 text-[10px] font-medium sm:inline-flex"
-                            :class="{
-                                'bg-[#F5E4DD] text-[#A85F4C]':
-                                    event.tone === 'peach',
-                                'bg-[#E4EBDD] text-[#42654B]':
-                                    event.tone === 'sage',
-                                'bg-[#EBE5F3] text-[#796894]':
-                                    event.tone === 'lavender',
-                            }"
+                            :class="toneClasses[event.tone] || toneClasses.sage"
                         >
                             {{ event.type }}
                         </span>
                     </article>
                 </div>
 
-                <div
-                    class="mt-4 flex items-center gap-2 rounded-xl bg-[#F7F5F0] px-3 py-3 text-xs leading-5 text-[#85877D]"
-                >
-                    <Clock
-                        :size="16"
-                        class="shrink-0 text-[#8B8C7D]"
-                    />
+                <div v-else class="mt-5 rounded-2xl bg-[#F7F5F0] px-4 py-8 text-center">
+                    <CalendarDays :size="25" class="mx-auto text-[#8B9A83]" />
+                    <p class="mt-3 font-heading text-lg text-[#354638]">
+                        Nothing coming up yet
+                    </p>
+                    <p class="mt-1 text-xs text-[#85877D]">
+                        Your upcoming deadlines and payments will appear here.
+                    </p>
+                    <Link
+                        href="/calendar"
+                        class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#42654B] hover:underline"
+                    >
+                        Open calendar
+                        <ArrowRight :size="14" />
+                    </Link>
+                </div>
+
+                <div class="mt-4 flex items-center gap-2 rounded-xl bg-[#F7F5F0] px-3 py-3 text-xs leading-5 text-[#85877D]">
+                    <Clock :size="16" class="shrink-0 text-[#8B8C7D]" />
                     Your upcoming deadlines and payments will appear here.
                 </div>
             </div>
 
-            <!-- Quick actions -->
-            <div
-                class="rounded-2xl border border-[#EAE6DD] bg-white p-5 sm:p-6"
-            >
-                <h2 class="text-lg font-semibold text-[#293B32]">
+            <!-- Quick Actions -->
+            <div class="rounded-2xl border border-[#EAE6DD] bg-white p-5 sm:p-6">
+                <h2 class="font-heading text-xl font-normal text-[#293B32]">
                     Make it happen
                 </h2>
                 <p class="mt-1 text-sm text-[#85877D]">
@@ -416,14 +347,7 @@ const actions = [
                     >
                         <span
                             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                            :class="{
-                                'bg-[#E4EBDD] text-[#42654B]':
-                                    action.tone === 'sage',
-                                'bg-[#F5E4DD] text-[#A85F4C]':
-                                    action.tone === 'peach',
-                                'bg-[#EBE5F3] text-[#796894]':
-                                    action.tone === 'lavender',
-                            }"
+                            :class="toneClasses[action.tone]"
                         >
                             <component
                                 :is="action.icon"
@@ -433,14 +357,10 @@ const actions = [
                         </span>
 
                         <span class="min-w-0 flex-1">
-                            <span
-                                class="block text-sm font-medium text-[#354638]"
-                            >
+                            <span class="block text-sm font-medium text-[#354638]">
                                 {{ action.title }}
                             </span>
-                            <span
-                                class="mt-1 block text-xs leading-5 text-[#85877D]"
-                            >
+                            <span class="mt-1 block text-xs leading-5 text-[#85877D]">
                                 {{ action.subtitle }}
                             </span>
                         </span>
@@ -452,13 +372,10 @@ const actions = [
                     </Link>
                 </div>
 
-                <!-- Reminder card -->
+                <!-- Reminder -->
                 <div class="mt-5 rounded-2xl bg-[#F7F5F0] p-4">
                     <div class="flex items-center gap-2">
-                        <PiggyBank
-                            :size="18"
-                            class="text-[#66816A]"
-                        />
+                        <PiggyBank :size="18" class="text-[#66816A]" />
                         <p class="text-sm font-semibold text-[#354638]">
                             Remember this
                         </p>
@@ -474,9 +391,7 @@ const actions = [
         </section>
 
         <!-- Footer -->
-        <footer
-            class="pb-3 pt-8 text-center text-xs text-[#99998D]"
-        >
+        <footer class="pb-3 pt-8 text-center text-xs text-[#99998D]">
             Made for student life · StuDesk
         </footer>
 

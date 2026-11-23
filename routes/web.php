@@ -65,6 +65,11 @@ Route::middleware(['auth'])->prefix('finance')->name('finance.')->group(function
     Route::get('/', [FinanceController::class, 'index'])->name('index');
 
     Route::resource('transactions', TransactionController::class);
+    Route::get('/finance/transactions/{transaction}/edit', [TransactionController::class, 'edit'])
+    ->name('finance.transactions.edit');
+
+Route::put('/finance/transactions/{transaction}', [TransactionController::class, 'update'])
+    ->name('finance.transactions.update');
     Route::resource('savings-goals', SavingsGoalController::class);
     Route::resource('budgets', BudgetController::class);Route::patch('bills/{bill}/pay', [BillController::class, 'markPaid'])
     ->name('bills.pay');
@@ -73,6 +78,11 @@ Route::middleware(['auth'])->prefix('finance')->name('finance.')->group(function
         \App\Http\Controllers\SavingsGoalController::class,
         'contribute',
     ])->name('savings-goals.contribute');
+
+    Route::get('quick-add-options', [
+    TransactionController::class,
+    'quickAddOptions',
+])->name('quick-add-options');
 });
 
 require __DIR__.'/auth.php';

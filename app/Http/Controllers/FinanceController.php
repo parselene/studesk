@@ -18,8 +18,21 @@ class FinanceController extends Controller
         $userId = auth()->id();
 
         $today = Carbon::today();
-        $monthStart = Carbon::now()->startOfMonth()->toDateString();
-        $monthEnd = Carbon::now()->endOfMonth()->toDateString();
+        $now = Carbon::now();
+
+        $monthStart = $now->copy()->startOfMonth()->toDateString();
+        $monthEnd = $now->copy()->endOfMonth()->toDateString();
+
+        // Previous month dates
+        $previousMonthStart = $now->copy()
+            ->subMonth()
+            ->startOfMonth()
+            ->toDateString();
+
+        $previousMonthEnd = $now->copy()
+            ->subMonth()
+            ->endOfMonth()
+            ->toDateString();
 
         // Total recorded income and ordinary expenses
         $totalIncome = (float) Transaction::where('user_id', $userId)
@@ -34,7 +47,7 @@ class FinanceController extends Controller
         $totalSavingsAllocated = (float) SavingsGoalContribution::where('user_id', $userId)
             ->sum('amount');
 
-        // Monthly income and ordinary expenses
+        // Current month income and expenses
         $monthlyIncome = (float) Transaction::where('user_id', $userId)
             ->where('type', 'income')
             ->whereBetween('transaction_date', [$monthStart, $monthEnd])
@@ -49,14 +62,68 @@ class FinanceController extends Controller
             ->whereBetween('contribution_date', [$monthStart, $monthEnd])
             ->sum('amount');
 
-        // Spending grouped by category
+        // Previous month income and expenses
+        $previousMonthIncome = (float) Transaction::where('user_id', $userId)
+            ->where('type', 'income')
+            ->whereBetween('transaction_date', [
+                $previousMonthStart,
+                $previousMonthEnd,
+            ])
+            ->sum('amount');
+
+        $previousMonthExpenses = (float) Transaction::where('user_id', $userId)
+            ->where('type', 'expense')
+            ->whereBetween('transaction_date', [
+                $previousMonthStart,
+                $previousMonthEnd,
+            ])
+            ->sum('amount');
+
+        // Spending grouped by category for the current month
         $spendingByCategory = Transaction::where('user_id', $userId)
             ->where('type', 'expense')
             ->whereBetween('transaction_date', [$monthStart, $monthEnd])
-            ->selectRaw('category, SUM(amount) as total')
+            ->selectRaw("COALESCE(NULLIF(category, ''), 'Uncategorized') as category, SUM(amount) as total")
             ->groupBy('category')
             ->orderByDesc('total')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'category' => $item->category,
+                    'total' => (float) $item->total,
+                ];
+            });
+
+        // Income and expenses for the last six months
+        $monthlyTrend = collect();
+
+        $trendStart = $now->copy()
+            ->startOfMonth()
+            ->subMonths(5);
+
+        for ($i = 0; $i < 6; $i++) {
+            $month = $trendStart->copy()->addMonths($i);
+
+            $start = $month->copy()->startOfMonth()->toDateString();
+            $end = $month->copy()->endOfMonth()->toDateString();
+
+            $income = (float) Transaction::where('user_id', $userId)
+                ->where('type', 'income')
+                ->whereBetween('transaction_date', [$start, $end])
+                ->sum('amount');
+
+            $expenses = (float) Transaction::where('user_id', $userId)
+                ->where('type', 'expense')
+                ->whereBetween('transaction_date', [$start, $end])
+                ->sum('amount');
+
+            $monthlyTrend->push([
+                'month' => $month->format('M'),
+                'monthKey' => $month->format('Y-m'),
+                'income' => $income,
+                'expenses' => $expenses,
+            ]);
+        }
 
         // Budgets currently in effect
         $budgets = Budget::where('user_id', $userId)
@@ -122,7 +189,6 @@ class FinanceController extends Controller
 
         return Inertia::render('Finance/Index', [
             'summary' => [
-                // Keep "balance" for compatibility with your existing Vue page.
                 'balance' => $availableBalance,
                 'availableBalance' => $availableBalance,
                 'totalIncome' => $totalIncome,
@@ -131,8 +197,13 @@ class FinanceController extends Controller
                 'monthlyIncome' => $monthlyIncome,
                 'monthlyExpenses' => $monthlyExpenses,
                 'monthlySavingsAllocated' => $monthlySavingsAllocated,
+                'previousMonthIncome' => $previousMonthIncome,
+                'previousMonthExpenses' => $previousMonthExpenses,
             ],
+
             'spendingByCategory' => $spendingByCategory,
+            'monthlyTrend' => $monthlyTrend,
+
             'budgets' => $budgets,
             'upcomingBills' => $upcomingBills,
             'savingsGoals' => $savingsGoals,

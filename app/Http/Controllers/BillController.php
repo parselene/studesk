@@ -125,7 +125,7 @@ class BillController extends Controller
     }
 
 
-public function markPaid(Bill $bill)
+public function markPaid(Request $request, Bill $bill)
 {
     abort_unless($bill->user_id === auth()->id(), 403);
 
@@ -198,9 +198,10 @@ public function markPaid(Bill $bill)
         ]);
     });
 
-    return redirect()
-        ->route('finance.bills.index')
-        ->with('success', 'Bill marked as paid. Your next recurring bill has been generated if applicable.');
+    return back()->with(
+        'success',
+        'Bill marked as paid. Your next recurring bill has been generated if applicable.'
+    );
 }
 
 

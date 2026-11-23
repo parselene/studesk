@@ -2,6 +2,11 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import {
+    ArrowLeft,
+    CheckCircle2,
+    Target,
+} from 'lucide-vue-next'
 
 defineOptions({ layout: AppLayout })
 
@@ -29,113 +34,158 @@ const submit = () => {
 <template>
     <Head title="Edit Savings Goal" />
 
-    <div class="mx-auto max-w-3xl space-y-7">
-        <div class="space-y-2">
+    <div class="min-w-0 pb-6 text-[#293B32]">
+        <!-- Header -->
+        <header class="mb-7">
             <Link
                 :href="`/finance/savings-goals/${goal.id}`"
-                class="text-sm font-medium text-[#54705D] hover:underline"
+                class="mb-5 inline-flex items-center gap-2 text-sm font-medium text-[#777D73] transition hover:text-[#294B3C]"
             >
-                ← Back to goal
+                <ArrowLeft
+                    :size="16"
+                    :strokeWidth="2"
+                    class="shrink-0"
+                />
+                Back to goal
             </Link>
 
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#758477]">
-                FINANCE / SAVINGS GOALS
+            <p class="mb-2 text-xs font-semibold uppercase tracking-[0.17em] text-[#8B8C7D]">
+                FINANCE / SAVINGS
             </p>
 
-            <h1 class="text-3xl font-bold text-[#294B3C]">
+            <h1 class="font-serif text-3xl font-semibold tracking-tight text-[#294B3C] sm:text-[36px]">
                 Edit savings goal
             </h1>
 
-            <p class="text-sm leading-6 text-gray-500">
+            <p class="mt-2 text-sm leading-relaxed text-[#777D73]">
                 Update your goal details while keeping your recorded contribution history.
             </p>
-        </div>
+        </header>
 
+        <!-- Form -->
         <form
-            class="space-y-6 rounded-2xl border border-[#E8E5DD] bg-white p-6 sm:p-8"
+            class="space-y-7 rounded-2xl border border-[#EAE6DD] bg-[#FFFEFA] p-5 shadow-[0_2px_10px_rgba(41,59,50,0.025)] sm:p-7 lg:p-8"
             @submit.prevent="submit"
         >
-            <div class="space-y-2">
-                <label for="name" class="text-sm font-semibold text-[#294B3C]">
-                    Goal name <span class="text-[#A15D35]">*</span>
+            <!-- Goal name -->
+            <div>
+                <label for="name" class="form-label">
+                    Goal name <span class="text-[#B97962]">*</span>
                 </label>
+
                 <input
                     id="name"
                     v-model="form.name"
                     type="text"
                     maxlength="255"
                     required
-                    class="w-full rounded-xl border border-[#DEDCD4] px-4 py-3 text-sm outline-none transition focus:border-[#82977A] focus:ring-2 focus:ring-[#82977A]/20"
+                    autofocus
+                    placeholder="e.g. New laptop, Tuition, Emergency fund"
+                    class="form-input"
                 />
-                <p v-if="form.errors.name" class="text-sm text-red-600">
+
+                <p v-if="form.errors.name" class="form-error">
                     {{ form.errors.name }}
                 </p>
             </div>
 
-            <div class="space-y-2">
-                <label for="target_amount" class="text-sm font-semibold text-[#294B3C]">
-                    Target amount (₱) <span class="text-[#A15D35]">*</span>
+            <!-- Target amount -->
+            <div>
+                <label for="target_amount" class="form-label">
+                    Target amount (₱) <span class="text-[#B97962]">*</span>
                 </label>
-                <input
-                    id="target_amount"
-                    v-model="form.target_amount"
-                    type="number"
-                    min="0.01"
-                    max="9999999999.99"
-                    step="0.01"
-                    required
-                    class="w-full rounded-xl border border-[#DEDCD4] px-4 py-3 text-sm outline-none transition focus:border-[#82977A] focus:ring-2 focus:ring-[#82977A]/20"
-                />
-                <p v-if="form.errors.target_amount" class="text-sm text-red-600">
+
+                <div class="relative">
+                    <span
+                        class="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-sm font-semibold text-[#8B8C7D]"
+                    >
+                        ₱
+                    </span>
+
+                    <input
+                        id="target_amount"
+                        v-model="form.target_amount"
+                        type="number"
+                        min="0.01"
+                        max="9999999999.99"
+                        step="0.01"
+                        required
+                        placeholder="15000.00"
+                        class="form-input pl-10"
+                    />
+                </div>
+
+                <p v-if="form.errors.target_amount" class="form-error">
                     {{ form.errors.target_amount }}
                 </p>
             </div>
 
-            <div class="space-y-2">
-                <label for="target_date" class="text-sm font-semibold text-[#294B3C]">
-                    Target date <span class="font-normal text-gray-400">(optional)</span>
+            <!-- Target date -->
+            <div>
+                <label for="target_date" class="form-label">
+                    Target date
+                    <span class="font-normal text-[#99998F]">(optional)</span>
                 </label>
+
                 <input
                     id="target_date"
                     v-model="form.target_date"
                     type="date"
-                    class="w-full rounded-xl border border-[#DEDCD4] px-4 py-3 text-sm outline-none transition focus:border-[#82977A] focus:ring-2 focus:ring-[#82977A]/20"
+                    class="form-input"
                 />
-                <p v-if="form.errors.target_date" class="text-sm text-red-600">
+
+                <p v-if="form.errors.target_date" class="form-error">
                     {{ form.errors.target_date }}
                 </p>
             </div>
 
-            <div class="space-y-2">
-                <label for="description" class="text-sm font-semibold text-[#294B3C]">
-                    Description <span class="font-normal text-gray-400">(optional)</span>
+            <!-- Description -->
+            <div>
+                <label for="description" class="form-label">
+                    Description
+                    <span class="font-normal text-[#99998F]">(optional)</span>
                 </label>
+
                 <textarea
                     id="description"
                     v-model="form.description"
                     rows="4"
                     maxlength="2000"
-                    class="w-full resize-y rounded-xl border border-[#DEDCD4] px-4 py-3 text-sm outline-none transition focus:border-[#82977A] focus:ring-2 focus:ring-[#82977A]/20"
+                    placeholder="What are you saving for?"
+                    class="form-input resize-y"
                 />
-                <p v-if="form.errors.description" class="text-sm text-red-600">
+
+                <p v-if="form.errors.description" class="form-error">
                     {{ form.errors.description }}
                 </p>
             </div>
 
-            <div class="rounded-xl border border-[#E8E5DD] bg-[#F7F5F0] p-4">
-                <p class="text-sm font-semibold text-[#294B3C]">
-                    Current progress
-                </p>
-                <p class="mt-1 text-sm text-gray-500">
-                    {{ Number(goal.progress_percentage || 0).toFixed(0) }}% complete.
-                    Updating the target won't delete your contribution history.
-                </p>
+            <!-- Current progress -->
+            <div class="flex gap-3 rounded-xl border border-[#C8D2C1] bg-[#E7EBDD] p-4">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/70 text-[#42614A]">
+                    <CheckCircle2
+                        :size="19"
+                        :strokeWidth="1.8"
+                    />
+                </div>
+
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-[#294B3C]">
+                        Current progress
+                    </p>
+
+                    <p class="mt-1 text-xs leading-relaxed text-[#777D73]">
+                        {{ Number(goal.progress_percentage || 0).toFixed(0) }}% complete.
+                        Updating your target won't delete your contribution history.
+                    </p>
+                </div>
             </div>
 
-            <div class="flex flex-col-reverse gap-3 border-t border-[#EEECE5] pt-5 sm:flex-row sm:justify-end">
+            <!-- Actions -->
+            <div class="flex flex-col-reverse gap-3 border-t border-[#EAE6DD] pt-5 sm:flex-row sm:justify-end">
                 <Link
                     :href="`/finance/savings-goals/${goal.id}`"
-                    class="inline-flex items-center justify-center rounded-xl border border-[#DEDCD4] px-5 py-3 text-sm font-semibold text-[#294B3C] transition hover:bg-[#F7F5F0]"
+                    class="inline-flex items-center justify-center rounded-xl border border-[#EAE6DD] bg-white px-5 py-3 text-sm font-semibold text-[#294B3C] transition hover:bg-[#F7F5F0]"
                 >
                     Cancel
                 </Link>
@@ -143,11 +193,72 @@ const submit = () => {
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="inline-flex items-center justify-center rounded-xl bg-[#294B3C] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#203C30] disabled:cursor-not-allowed disabled:opacity-60"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#294B3C] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#203D30] disabled:cursor-not-allowed disabled:opacity-60"
                 >
+                    <Target
+                        :size="16"
+                        :strokeWidth="2"
+                        class="shrink-0"
+                    />
+
                     {{ form.processing ? 'Saving...' : 'Save changes' }}
                 </button>
             </div>
         </form>
     </div>
 </template>
+
+<style scoped>
+.form-label {
+    display: block;
+    margin-bottom: 9px;
+    color: #294B3C;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.form-input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #E3E0D7;
+    border-radius: 12px;
+    background-color: #FFFEFA;
+    padding: 12px 15px;
+    color: #293B32;
+    font-size: 13px;
+    line-height: 1.5;
+    outline: none;
+    transition:
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        background-color 180ms ease;
+}
+
+/* Fix spacing for inputs with icons */
+.form-input.pl-10 {
+    padding-left: 40px;
+}
+
+.form-input::placeholder {
+    color: #A2A197;
+}
+
+.form-input:focus {
+    border-color: #8B9D80;
+    background-color: #FFF;
+    box-shadow: 0 0 0 3px rgba(139, 157, 128, 0.13);
+}
+
+.form-error {
+    margin-top: 7px;
+    color: #B4534B;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .form-input {
+        font-size: 16px;
+    }
+}
+</style>

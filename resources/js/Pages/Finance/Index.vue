@@ -15,9 +15,12 @@ const props = defineProps({
             totalExpenses: 0,
             monthlyIncome: 0,
             monthlyExpenses: 0,
+            previousMonthIncome: 0,
+            previousMonthExpenses: 0,
         }),
     },
     spendingByCategory: { type: Array, default: () => [] },
+    monthlyTrend: { type: Array, default: () => [] },
     budgets: { type: Array, default: () => [] },
     upcomingBills: { type: Array, default: () => [] },
     savingsGoals: { type: Array, default: () => [] },
@@ -138,13 +141,162 @@ const monthlyMessage = computed(() => {
 
 const transactionType = (transaction) =>
     String(transaction.type || '').toLowerCase()
+
+// FINANCIAL ANALYTICS
+
+const chartColors = [
+    '#82977A',
+    '#C78971',
+    '#A394BC',
+    '#C3A565',
+    '#6D9290',
+    '#B7A18C',
+    '#A5A697',
+]
+
+const categoryChartData = computed(() => {
+    const total = props.spendingByCategory.reduce(
+        (sum, item) => sum + Number(item.total || 0),
+        0
+    )
+
+    let currentAngle = 0
+
+    return props.spendingByCategory.map((item, index) => {
+        const amount = Number(item.total || 0)
+        const percentage = total > 0 ? (amount / total) * 100 : 0
+
+        const start = currentAngle
+        const end = currentAngle + percentage
+
+        currentAngle = end
+
+        return {
+            category: categoryName(item.category),
+            amount,
+            percentage,
+            color: chartColors[index % chartColors.length],
+            start,
+            end,
+        }
+    })
+})
+
+const categoryDonutStyle = computed(() => {
+    if (!categoryChartData.value.length) {
+        return { background: '#EEEEE6' }
+    }
+
+    const segments = categoryChartData.value.map(item =>
+        `${item.color} ${item.start}% ${item.end}%`
+    )
+
+    return {
+        background: `conic-gradient(${segments.join(', ')})`,
+    }
+})
+
+const monthlyTrendMaximum = computed(() => {
+    const highest = Math.max(
+        0,
+        ...props.monthlyTrend.map(item =>
+            Math.max(
+                Number(item.income || 0),
+                Number(item.expenses || 0)
+            )
+        )
+    )
+
+    return highest || 1
+})
+
+const expenseChange = computed(() => {
+    const current = Number(props.summary.monthlyExpenses || 0)
+    const previous = Number(props.summary.previousMonthExpenses || 0)
+
+    if (previous === 0) {
+        return current > 0 ? null : 0
+    }
+
+    return ((current - previous) / previous) * 100
+})
+
+const expenseComparisonMessage = computed(() => {
+    const current = Number(props.summary.monthlyExpenses || 0)
+    const previous = Number(props.summary.previousMonthExpenses || 0)
+
+    if (previous === 0 && current > 0) {
+        return 'You have spending recorded this month, but no expenses recorded last month for comparison.'
+    }
+
+    if (previous === 0 && current === 0) {
+        return 'No expenses have been recorded for this month or last month.'
+    }
+
+    if (current > previous) {
+        return `Your expenses increased by ${Math.abs(expenseChange.value).toFixed(1)}% compared with last month.`
+    }
+
+    if (current < previous) {
+        return `Your expenses decreased by ${Math.abs(expenseChange.value).toFixed(1)}% compared with last month.`
+    }
+
+    return 'Your recorded expenses are the same as last month.'
+})
+
+const financialInsights = computed(() => {
+    const insights = []
+
+    if (largestCategory.value && Number(props.summary.monthlyExpenses) > 0) {
+        const percentage =
+            (Number(largestCategory.value.total) /
+                Number(props.summary.monthlyExpenses)) * 100
+
+        insights.push({
+            icon: '↗',
+            title: 'Your biggest expense',
+            description: `${categoryName(largestCategory.value.category)} takes up ${percentage.toFixed(1)}% of your recorded expenses this month.`,
+        })
+    }
+
+    if (
+        Number(props.summary.monthlyIncome) > 0 ||
+        Number(props.summary.monthlyExpenses) > 0
+    ) {
+        const difference =
+            Number(props.summary.monthlyIncome || 0) -
+            Number(props.summary.monthlyExpenses || 0)
+
+        insights.push({
+            icon: '₱',
+            title: 'Income and spending',
+            description: difference >= 0
+                ? `You have ${money(difference)} more recorded income than expenses this month.`
+                : `Your recorded expenses exceed your income by ${money(Math.abs(difference))} this month.`,
+        })
+    }
+
+    insights.push({
+        icon: '◷',
+        title: 'Month-to-month spending',
+        description: expenseComparisonMessage.value,
+    })
+
+    return insights
+})
+
+const monthlyTrendHasData = computed(() =>
+    props.monthlyTrend.some(item =>
+        Number(item.income) > 0 || Number(item.expenses) > 0
+    )
+)
 </script>
 
 <template>
     <Head title="Financial Overview" />
 
     <div class="finance-page">
-        <!-- Header -->
+        <!-- HEADER -->
         <header class="page-header">
             <div>
                 <p class="eyebrow">YOUR MONEY, YOUR PLAN</p>
@@ -162,7 +314,7 @@ const transactionType = (transaction) =>
             </div>
         </header>
 
-        <!-- Main balance -->
+        <!-- MAIN BALANCE -->
         <section class="balance-panel">
             <div class="balance-main">
                 <div class="balance-label">
@@ -196,7 +348,7 @@ const transactionType = (transaction) =>
             </div>
         </section>
 
-        <!-- Income and expenses -->
+        <!-- FINANCIAL METRICS -->
         <section class="metric-grid">
             <article class="metric-card">
                 <div class="metric-top">
@@ -257,7 +409,253 @@ const transactionType = (transaction) =>
             </article>
         </section>
 
-        <!-- Monthly overview -->
+        <!-- FINANCIAL ANALYTICS -->
+        <section class="analytics-section">
+            <div class="analytics-heading">
+                <div>
+                    <p class="eyebrow">YOUR FINANCIAL PATTERNS</p>
+                    <h2>Spending analytics<span class="title-period">.</span></h2>
+                    <p class="subtitle">
+                        Understand where your money goes and how your habits change over time.
+                    </p>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <!-- DONUT CHART -->
+                <article class="panel analytics-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">EXPENSE DISTRIBUTION</p>
+                            <h2>Where your money goes</h2>
+                            <p class="panel-subtitle">
+                                Breakdown of this month's recorded expenses.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div v-if="categoryChartData.length" class="donut-layout">
+                        <div class="donut-chart" :style="categoryDonutStyle">
+                            <div class="donut-center">
+                                <span>TOTAL SPENT</span>
+                                <strong>{{ money(summary.monthlyExpenses) }}</strong>
+                                <small>{{ monthLabel }}</small>
+                            </div>
+                        </div>
+
+                        <div class="donut-legend">
+                            <div
+                                v-for="item in categoryChartData"
+                                :key="item.category"
+                                class="legend-item"
+                            >
+                                <span
+                                    class="legend-dot"
+                                    :style="{ background: item.color }"
+                                ></span>
+
+                                <div class="legend-details">
+                                    <strong>{{ item.category }}</strong>
+                                    <span>{{ item.percentage.toFixed(1) }}%</span>
+                                </div>
+
+                                <span class="legend-amount">
+                                    {{ money(item.amount) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else class="analytics-empty">
+                        <span class="empty-icon">◔</span>
+                        <h3>No spending data yet</h3>
+                        <p>Record an expense to see your spending distribution.</p>
+                        <Link href="/finance/transactions/create" class="secondary-button">
+                            Record an expense
+                        </Link>
+                    </div>
+                </article>
+
+                <!-- SIX-MONTH BAR CHART -->
+                <article class="panel analytics-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">SIX-MONTH OVERVIEW</p>
+                            <h2>Income vs. expenses</h2>
+                            <p class="panel-subtitle">
+                                Compare the money you received and spent each month.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="chart-legend">
+                        <span>
+                            <i class="chart-key income-key"></i>
+                            Income
+                        </span>
+                        <span>
+                            <i class="chart-key expense-key"></i>
+                            Expenses
+                        </span>
+                    </div>
+
+                    <div v-if="monthlyTrendHasData" class="monthly-chart">
+                        <div
+                            v-for="month in monthlyTrend"
+                            :key="month.monthKey"
+                            class="monthly-chart-column"
+                        >
+                            <div class="bar-pair">
+                                <div
+                                    class="chart-bar income-bar"
+                                    :style="{
+                                        height: Math.max(
+                                            Number(month.income) > 0 ? 3 : 0,
+                                            Number(month.income) / monthlyTrendMaximum * 100
+                                        ) + '%'
+                                    }"
+                                    :title="'Income: ' + money(month.income)"
+                                ></div>
+
+                                <div
+                                    class="chart-bar expense-bar"
+                                    :style="{
+                                        height: Math.max(
+                                            Number(month.expenses) > 0 ? 3 : 0,
+                                            Number(month.expenses) / monthlyTrendMaximum * 100
+                                        ) + '%'
+                                    }"
+                                    :title="'Expenses: ' + money(month.expenses)"
+                                ></div>
+                            </div>
+
+                            <span class="chart-month">{{ month.month }}</span>
+                        </div>
+                    </div>
+
+                    <div v-else class="analytics-empty chart-empty">
+                        <span class="empty-icon">▥</span>
+                        <h3>No monthly comparison yet</h3>
+                        <p>Your income and expenses will appear here as you record transactions.</p>
+                    </div>
+
+                    <div class="chart-footnote">
+                        <span class="activity-dot"></span>
+                        Based on your last six months of recorded transactions.
+                    </div>
+                </article>
+            </div>
+
+            <!-- SPENDING RANKING -->
+            <article class="panel ranking-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">KNOW YOUR PRIORITIES</p>
+                        <h2>Biggest spending categories<span class="title-period">.</span></h2>
+                        <p class="panel-subtitle">
+                            See which categories account for the largest part of your expenses.
+                        </p>
+                    </div>
+
+                    <Link href="/finance/transactions" class="text-link">
+                        View transactions ↗
+                    </Link>
+                </div>
+
+                <div v-if="categoryChartData.length" class="ranking-list">
+                    <div
+                        v-for="(item, index) in categoryChartData"
+                        :key="item.category"
+                        class="ranking-item"
+                    >
+                        <div class="ranking-top">
+                            <div class="ranking-category">
+                                <span class="ranking-number">
+                                    {{ String(index + 1).padStart(2, '0') }}
+                                </span>
+                                <span
+                                    class="ranking-color"
+                                    :style="{ background: item.color }"
+                                ></span>
+                                <strong>{{ item.category }}</strong>
+                            </div>
+
+                            <div class="ranking-amount">
+                                <strong>{{ money(item.amount) }}</strong>
+                                <span>{{ item.percentage.toFixed(1) }}%</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-track ranking-track">
+                            <div
+                                class="progress-fill"
+                                :style="{
+                                    width: item.percentage + '%',
+                                    background: item.color
+                                }"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="analytics-empty">
+                    <h3>No categories to rank yet</h3>
+                    <p>Once you record expenses, your spending categories will be ranked here.</p>
+                </div>
+            </article>
+
+            <!-- AUTOMATIC INSIGHTS -->
+            <article class="panel insights-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">A LITTLE FINANCIAL SELF-CHECK</p>
+                        <h2>What your numbers tell you<span class="title-period">.</span></h2>
+                        <p class="panel-subtitle">
+                            Observations based on your recorded financial activity.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="insights-grid">
+                    <div
+                        v-for="(insight, index) in financialInsights"
+                        :key="index"
+                        class="insight-card"
+                    >
+                        <span class="insight-icon">{{ insight.icon }}</span>
+                        <div>
+                            <strong>{{ insight.title }}</strong>
+                            <p>{{ insight.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- MONTHLY COMPARISON -->
+            <article class="comparison-card">
+                <div class="comparison-main">
+                    <p class="eyebrow">MONTHLY SPENDING CHECK</p>
+                    <h3>Compared with last month</h3>
+                    <p>{{ expenseComparisonMessage }}</p>
+                </div>
+
+                <div
+                    class="comparison-value"
+                    :class="{
+                        'comparison-up': expenseChange !== null && expenseChange > 0,
+                        'comparison-down': expenseChange !== null && expenseChange < 0
+                    }"
+                >
+                    <strong v-if="expenseChange !== null">
+                        {{ expenseChange > 0 ? '+' : '' }}{{ expenseChange.toFixed(1) }}%
+                    </strong>
+                    <strong v-else>—</strong>
+                    <span>Expense change</span>
+                </div>
+            </article>
+        </section>
+
+        <!-- SPENDING AND BUDGET -->
         <section class="content-grid">
             <article class="panel spending-panel">
                 <div class="panel-heading">
@@ -340,7 +738,7 @@ const transactionType = (transaction) =>
                 </div>
             </article>
 
-            <!-- Budget health -->
+            <!-- BUDGET HEALTH -->
             <article class="panel budget-panel">
                 <div class="panel-heading">
                     <div>
@@ -436,7 +834,7 @@ const transactionType = (transaction) =>
             </article>
         </section>
 
-        <!-- Savings and bills -->
+        <!-- SAVINGS AND BILLS -->
         <section class="content-grid">
             <article class="panel savings-panel">
                 <div class="panel-heading">
@@ -590,7 +988,7 @@ const transactionType = (transaction) =>
             </article>
         </section>
 
-        <!-- Recent transactions -->
+        <!-- RECENT TRANSACTIONS -->
         <section class="panel activity-panel">
             <div class="panel-heading">
                 <div>
@@ -699,22 +1097,24 @@ const transactionType = (transaction) =>
 </template>
 
 <style scoped>
+/* PAGE */
+
 .finance-page {
     width: 100%;
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 32px 24px 48px;
-    color: #354638;
+    min-width: 0;
+    padding: 0 0 24px;
+    color: #293B32;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .eyebrow {
     margin: 0 0 8px;
-    color: #8a9385;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.7px;
+    color: #8B8C7D;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.17em;
     line-height: 1.5;
+    text-transform: uppercase;
 }
 
 h1, h2, h3, p {
@@ -731,7 +1131,7 @@ h1, h2, h3, p {
 
 .page-header h1 {
     margin: 0;
-    color: #2b4033;
+    color: #294B3C;
     font-family: Georgia, "Times New Roman", serif;
     font-size: clamp(30px, 4vw, 40px);
     font-weight: 500;
@@ -740,14 +1140,14 @@ h1, h2, h3, p {
 }
 
 .title-period {
-    color: #bb806a;
+    color: #B97962;
 }
 
 .subtitle {
     max-width: 540px;
     margin: 10px 0 0;
-    color: #81867c;
-    font-size: 12px;
+    color: #777D73;
+    font-size: 13px;
     line-height: 1.8;
 }
 
@@ -755,40 +1155,41 @@ h1, h2, h3, p {
     flex-shrink: 0;
 }
 
-.primary-button, .secondary-button {
+.primary-button,
+.secondary-button {
     display: inline-flex;
-    min-height: 41px;
+    min-height: 42px;
     align-items: center;
     justify-content: center;
     gap: 9px;
-    padding: 0 16px;
+    padding: 0 17px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 11px;
     font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 650;
     text-decoration: none;
     transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .primary-button {
-    background: #294b3c;
-    color: #fffefa;
+    background: #294B3C;
+    color: #FFFEFA;
 }
 
 .primary-button:hover {
     transform: translateY(-1px);
-    background: #203d30;
+    background: #203D30;
 }
 
 .secondary-button {
-    border-color: #e2e2d8;
-    background: #fffefa;
-    color: #4a5d4e;
+    border-color: #DCE2D6;
+    background: #FFFEFA;
+    color: #42614A;
 }
 
 .secondary-button:hover {
-    background: #f0f1e9;
+    background: #E7EBDD;
 }
 
 .button-plus {
@@ -797,19 +1198,19 @@ h1, h2, h3, p {
     line-height: 1;
 }
 
-/* Balance panel */
+/* BALANCE */
 
 .balance-panel {
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
     gap: 24px;
-    margin-bottom: 15px;
-    padding: 27px 29px;
+    margin-bottom: 16px;
+    padding: 29px 30px;
     overflow: hidden;
-    border: 1px solid #365b47;
-    border-radius: 18px;
-    background: #294b3c;
-    color: #fffefa;
+    border: 1px solid #365B47;
+    border-radius: 20px;
+    background: #294B3C;
+    color: #FFFEFA;
     box-shadow: 0 5px 18px rgb(41 75 60 / 7%);
 }
 
@@ -821,17 +1222,17 @@ h1, h2, h3, p {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #c5d3c4;
-    font-size: 9px;
-    font-weight: 750;
-    letter-spacing: 1.3px;
+    color: #C5D3C4;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.13em;
 }
 
 .balance-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #b7cba9;
+    background: #B7CBA9;
 }
 
 .balance-amount {
@@ -846,8 +1247,8 @@ h1, h2, h3, p {
 
 .balance-description {
     margin: 8px 0 0;
-    color: #c0cfc1;
-    font-size: 11px;
+    color: #C0CFC1;
+    font-size: 12px;
     line-height: 1.6;
 }
 
@@ -860,9 +1261,9 @@ h1, h2, h3, p {
 }
 
 .balance-links a {
-    color: #f0f2e9;
-    font-size: 10px;
-    font-weight: 650;
+    color: #F0F2E9;
+    font-size: 11px;
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -888,23 +1289,23 @@ h1, h2, h3, p {
 
 .balance-side-icon {
     display: grid;
-    width: 35px;
-    height: 35px;
+    width: 38px;
+    height: 38px;
     place-items: center;
     border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: 11px;
+    border-radius: 12px;
     background: rgb(255 255 255 / 8%);
-    color: #d7e0d0;
+    color: #D7E0D0;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 19px;
+    font-size: 20px;
 }
 
 .balance-side-label {
     margin: 17px 0 5px;
-    color: #c5d3c4;
-    font-size: 9px;
-    font-weight: 750;
-    letter-spacing: 1.2px;
+    color: #C5D3C4;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.13em;
 }
 
 .balance-side-amount {
@@ -916,37 +1317,43 @@ h1, h2, h3, p {
 }
 
 .balance-side-amount.positive {
-    color: #d7e5c9;
+    color: #D7E5C9;
 }
 
 .balance-side-amount.negative {
-    color: #f0c1ac;
+    color: #F0C1AC;
 }
 
 .balance-side-note {
     max-width: 230px;
     margin: 7px 0 0;
-    color: #c0cfc1;
-    font-size: 10px;
+    color: #C0CFC1;
+    font-size: 11px;
     line-height: 1.7;
 }
 
-/* Metric cards */
+/* METRICS */
 
 .metric-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 13px;
-    margin-bottom: 26px;
+    gap: 14px;
+    margin-bottom: 30px;
 }
 
 .metric-card {
     min-width: 0;
-    padding: 17px 17px 16px;
-    border: 1px solid #e8e7de;
-    border-radius: 14px;
-    background: #fffefa;
-    box-shadow: 0 2px 7px rgb(39 58 48 / 2%);
+    padding: 19px 18px 17px;
+    border: 1px solid #EAE6DD;
+    border-radius: 16px;
+    background: #FFFEFA;
+    box-shadow: 0 2px 8px rgb(39 58 48 / 3%);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgb(39 58 48 / 6%);
 }
 
 .metric-top {
@@ -958,96 +1365,85 @@ h1, h2, h3, p {
 
 .metric-icon {
     display: grid;
-    width: 33px;
-    height: 33px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
     place-items: center;
-    border-radius: 10px;
-    font-size: 17px;
+    border-radius: 11px;
+    font-size: 18px;
 }
 
 .income-icon {
-    background: #e5eee1;
+    background: #E7EBDD;
     color: #547653;
 }
 
 .expense-icon {
-    background: #f7e8e1;
-    color: #ad7059;
+    background: #F5E4DD;
+    color: #A85F4C;
 }
 
 .budget-icon {
-    background: #eee9f3;
-    color: #82719a;
+    background: #EBE5F3;
+    color: #796894;
 }
 
 .bills-icon {
-    background: #f1ecdf;
-    color: #9a8250;
+    background: #F3ECD9;
+    color: #8E7846;
 }
 
 .metric-period {
-    color: #9a9d91;
-    font-size: 8px;
-    font-weight: 750;
-    letter-spacing: 0.8px;
+    color: #8B8C7D;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
     text-align: right;
 }
 
 .metric-label {
     margin: 17px 0 5px;
-    color: #81867c;
-    font-size: 10px;
+    color: #777D73;
+    font-size: 12px;
 }
 
 .metric-value {
     margin: 0;
-    color: #2b4033;
+    color: #294B3C;
     font-size: clamp(17px, 2vw, 22px);
-    font-weight: 750;
+    font-weight: 700;
     letter-spacing: -0.6px;
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
 
 .negative {
-    color: #a85f4c !important;
+    color: #A85F4C !important;
 }
 
 .metric-bottom {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     margin-top: 11px;
-    color: #929488;
-    font-size: 9px;
+    color: #85877D;
+    font-size: 11px;
     line-height: 1.6;
 }
 
 .metric-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     flex-shrink: 0;
     border-radius: 50%;
 }
 
-.income-dot {
-    background: #83a07c;
-}
+.income-dot { background: #83A07C; }
+.expense-dot { background: #C78971; }
+.budget-dot { background: #A394BC; }
+.bills-dot { background: #C3A565; }
 
-.expense-dot {
-    background: #c78971;
-}
-
-.budget-dot {
-    background: #a394bc;
-}
-
-.bills-dot {
-    background: #c3a565;
-}
-
-/* General panels */
+/* GENERAL PANELS */
 
 .content-grid {
     display: grid;
@@ -1058,11 +1454,11 @@ h1, h2, h3, p {
 
 .panel {
     min-width: 0;
-    padding: 23px;
-    border: 1px solid #e8e7de;
-    border-radius: 16px;
-    background: #fffefa;
-    box-shadow: 0 2px 8px rgb(39 58 48 / 2%);
+    padding: 24px;
+    border: 1px solid #EAE6DD;
+    border-radius: 18px;
+    background: #FFFEFA;
+    box-shadow: 0 2px 8px rgb(39 58 48 / 3%);
 }
 
 .panel-heading {
@@ -1074,14 +1470,14 @@ h1, h2, h3, p {
 }
 
 .panel-heading .eyebrow {
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
 .panel-heading h2 {
     margin: 0;
-    color: #2b4033;
+    color: #294B3C;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(20px, 2.3vw, 25px);
+    font-size: clamp(21px, 2.3vw, 25px);
     font-weight: 500;
     letter-spacing: -0.45px;
     line-height: 1.3;
@@ -1089,17 +1485,17 @@ h1, h2, h3, p {
 
 .panel-subtitle {
     margin: 7px 0 0;
-    color: #8a8d82;
-    font-size: 10px;
+    color: #777D73;
+    font-size: 12px;
     line-height: 1.7;
 }
 
 .text-link {
     flex-shrink: 0;
     margin-top: 4px;
-    color: #54705d;
-    font-size: 10px;
-    font-weight: 750;
+    color: #54705D;
+    font-size: 11px;
+    font-weight: 650;
     text-decoration: none;
 }
 
@@ -1107,7 +1503,420 @@ h1, h2, h3, p {
     text-decoration: underline;
 }
 
-/* Spending breakdown */
+/* ANALYTICS */
+
+.analytics-section {
+    margin-bottom: 30px;
+}
+
+.analytics-heading {
+    margin-bottom: 18px;
+}
+
+.analytics-heading h2 {
+    margin: 0;
+    color: #294B3C;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(25px, 3vw, 30px);
+    font-weight: 500;
+    letter-spacing: -0.6px;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.analytics-panel {
+    min-height: 310px;
+}
+
+.donut-layout {
+    display: flex;
+    align-items: center;
+    gap: 23px;
+}
+
+.donut-chart {
+    display: grid;
+    width: 190px;
+    height: 190px;
+    min-width: 190px;
+    place-items: center;
+    border-radius: 50%;
+    position: relative;
+}
+
+.donut-chart::before {
+    position: absolute;
+    inset: 23px;
+    border-radius: 50%;
+    background: #FFFEFA;
+    content: '';
+}
+
+.donut-center {
+    z-index: 1;
+    display: flex;
+    max-width: 135px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.donut-center span {
+    color: #8B8C7D;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.1em;
+}
+
+.donut-center strong {
+    margin-top: 6px;
+    color: #294B3C;
+    font-size: 16px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.donut-center small {
+    margin-top: 4px;
+    color: #85877D;
+    font-size: 10px;
+}
+
+.donut-legend {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 3px;
+}
+
+.legend-details {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.legend-details strong {
+    color: #465449;
+    font-size: 12px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.legend-details span {
+    color: #85877D;
+    font-size: 11px;
+}
+
+.legend-amount {
+    flex-shrink: 0;
+    color: #465449;
+    font-size: 11px;
+    font-weight: 650;
+    text-align: right;
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: -5px 0 17px;
+}
+
+.chart-legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #777D73;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.chart-key {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+}
+
+.income-key { background: #82977A; }
+.expense-key { background: #C78971; }
+
+.monthly-chart {
+    display: flex;
+    height: 190px;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 10px;
+    padding: 10px 5px 0;
+    border-bottom: 1px solid #EAE6DD;
+}
+
+.monthly-chart-column {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.bar-pair {
+    display: flex;
+    width: 100%;
+    height: 155px;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+}
+
+.chart-bar {
+    width: min(27%, 24px);
+    min-height: 0;
+    border-radius: 5px 5px 2px 2px;
+    transition: height 250ms ease;
+}
+
+.income-bar { background: #82977A; }
+.expense-bar { background: #C78971; }
+
+.chart-month {
+    margin-top: 9px;
+    color: #777D73;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.chart-footnote {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    color: #85877D;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.ranking-panel,
+.insights-panel {
+    margin-bottom: 16px;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.ranking-item {
+    min-width: 0;
+}
+
+.ranking-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.ranking-category {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+}
+
+.ranking-number {
+    color: #8B8C7D;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11px;
+}
+
+.ranking-color {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 3px;
+}
+
+.ranking-category strong {
+    color: #465449;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.ranking-amount {
+    display: flex;
+    flex-shrink: 0;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.ranking-amount strong {
+    color: #294B3C;
+    font-size: 12px;
+}
+
+.ranking-amount span {
+    color: #85877D;
+    font-size: 11px;
+}
+
+.ranking-track {
+    height: 7px !important;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.insight-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid #EAE6DD;
+    border-radius: 13px;
+    background: #F7F7F1;
+}
+
+.insight-icon {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 10px;
+    background: #E7EBDD;
+    color: #54705D;
+    font-size: 16px;
+}
+
+.insight-card strong {
+    display: block;
+    color: #405143;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.insight-card p {
+    margin: 6px 0 0;
+    color: #777D73;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+.comparison-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 23px;
+    border: 1px solid #EAE6DD;
+    border-radius: 16px;
+    background: #F7F5F0;
+}
+
+.comparison-main {
+    min-width: 0;
+}
+
+.comparison-main .eyebrow {
+    margin-bottom: 6px;
+}
+
+.comparison-main h3 {
+    margin: 0;
+    color: #294B3C;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.comparison-main > p:last-child {
+    margin: 6px 0 0;
+    color: #777D73;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.comparison-value {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.comparison-value strong {
+    color: #687D60;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.comparison-value span {
+    color: #85877D;
+    font-size: 11px;
+}
+
+.comparison-up strong { color: #A85F4C; }
+.comparison-down strong { color: #547653; }
+
+.analytics-empty {
+    display: flex;
+    min-height: 210px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.analytics-empty h3 {
+    margin: 0;
+    color: #294B3C;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
+    font-weight: 500;
+}
+
+.analytics-empty p {
+    max-width: 260px;
+    margin: 7px 0 13px;
+    color: #777D73;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.chart-empty {
+    min-height: 180px;
+}
+
+/* SPENDING BREAKDOWN */
 
 .category-list {
     display: flex;
@@ -1135,15 +1944,15 @@ h1, h2, h3, p {
 }
 
 .category-number {
-    color: #a5a697;
+    color: #8B8C7D;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .category-name {
     color: #465449;
-    font-size: 11px;
-    font-weight: 650;
+    font-size: 12px;
+    font-weight: 600;
     overflow-wrap: anywhere;
 }
 
@@ -1155,14 +1964,14 @@ h1, h2, h3, p {
 }
 
 .category-amount strong {
-    color: #344739;
-    font-size: 11px;
-    font-weight: 750;
+    color: #294B3C;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .category-amount span {
-    color: #929488;
-    font-size: 9px;
+    color: #85877D;
+    font-size: 11px;
 }
 
 .progress-track {
@@ -1170,49 +1979,52 @@ h1, h2, h3, p {
     height: 6px;
     overflow: hidden;
     border-radius: 20px;
-    background: #eeeee6;
+    background: #EEEEE6;
 }
 
 .progress-fill {
     height: 100%;
     border-radius: inherit;
-    background: #82977a;
+    background: #82977A;
     transition: width 250ms ease;
 }
 
 .category-fill {
-    background: #8da183;
+    background: #8DA183;
 }
 
-.insight-note, .bill-reminder {
+.insight-note,
+.bill-reminder {
     display: flex;
     align-items: flex-start;
     gap: 10px;
     margin-top: 23px;
-    padding: 12px;
-    border: 1px solid #e8eadd;
-    border-radius: 10px;
-    background: #f5f6ef;
+    padding: 13px;
+    border: 1px solid #EAE6DD;
+    border-radius: 12px;
+    background: #F7F7F1;
 }
 
-.insight-mark, .reminder-icon {
+.insight-mark,
+.reminder-icon {
     display: grid;
-    width: 19px;
-    height: 19px;
+    width: 21px;
+    height: 21px;
     flex-shrink: 0;
     place-items: center;
     border-radius: 50%;
-    background: #dfe7d7;
-    color: #54705d;
+    background: #E7EBDD;
+    color: #54705D;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
 }
 
-.insight-note p, .bill-reminder p {
+.insight-note p,
+.bill-reminder p {
     margin: 0;
-    color: #70796d;
-    font-size: 10px;
+    color: #70796D;
+    font-size: 11px;
     line-height: 1.7;
 }
 
@@ -1220,7 +2032,7 @@ h1, h2, h3, p {
     color: #405642;
 }
 
-/* Budget check-in */
+/* BUDGET */
 
 .budget-summary {
     display: flex;
@@ -1240,37 +2052,30 @@ h1, h2, h3, p {
 }
 
 .small-label {
-    color: #96998d;
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 1px;
+    color: #8B8C7D;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.1em;
 }
 
 .budget-summary strong {
-    color: #354638;
-    font-size: 17px;
-    font-weight: 750;
+    color: #294B3C;
+    font-size: 19px;
+    font-weight: 700;
 }
 
-.overall-track {
-    height: 8px;
-}
+.overall-track { height: 8px; }
+.fill-warning { background: #C4A96C; }
+.fill-danger { background: #C77E67; }
 
-.fill-warning {
-    background: #c4a96c;
-}
-
-.fill-danger {
-    background: #c77e67;
-}
-
-.budget-total-caption, .goal-caption {
+.budget-total-caption,
+.goal-caption {
     display: flex;
     justify-content: space-between;
     gap: 10px;
     margin-top: 8px;
-    color: #929488;
-    font-size: 9px;
+    color: #85877D;
+    font-size: 11px;
     line-height: 1.6;
 }
 
@@ -1280,7 +2085,7 @@ h1, h2, h3, p {
     gap: 18px;
     margin-top: 23px;
     padding-top: 18px;
-    border-top: 1px solid #eeece5;
+    border-top: 1px solid #EAE6DD;
 }
 
 .budget-item-heading {
@@ -1302,67 +2107,65 @@ h1, h2, h3, p {
     width: 8px;
     height: 8px;
     flex-shrink: 0;
-    margin-top: 4px;
+    margin-top: 5px;
     border-radius: 3px;
-    background: #8da183;
+    background: #8DA183;
 }
 
 .budget-name {
     margin: 0;
     color: #405143;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 650;
 }
 
 .budget-category {
     margin: 4px 0 0;
-    color: #929488;
-    font-size: 9px;
+    color: #85877D;
+    font-size: 11px;
 }
 
 .status-pill {
     flex-shrink: 0;
-    padding: 5px 7px;
-    border-radius: 6px;
-    font-size: 8px;
-    font-weight: 750;
+    padding: 5px 8px;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 650;
 }
 
 .status-good {
-    background: #e8eee3;
+    background: #E7EBDD;
     color: #547653;
 }
 
 .status-warning {
-    background: #f3eddd;
+    background: #F3ECD9;
     color: #927744;
 }
 
 .status-danger {
-    background: #f7e8e1;
-    color: #a45e4c;
+    background: #F5E4DD;
+    color: #A45E4C;
 }
 
-.budget-track {
-    height: 5px;
-}
+.budget-track { height: 6px; }
 
 .budget-amounts {
     display: flex;
     justify-content: space-between;
     gap: 10px;
     margin-top: 7px;
-    color: #929488;
-    font-size: 9px;
+    color: #85877D;
+    font-size: 11px;
 }
 
-/* Savings */
+/* SAVINGS */
 
 .savings-total-card {
-    padding: 17px;
-    border: 1px solid #e3e7db;
-    border-radius: 12px;
-    background: #f2f4ec;
+    padding: 18px;
+    border: 1px solid #DCE3D5;
+    border-radius: 14px;
+    background: #F2F4EC;
 }
 
 .savings-total-top {
@@ -1375,9 +2178,9 @@ h1, h2, h3, p {
 
 .savings-total {
     margin: 7px 0 0;
-    color: #294b3c;
+    color: #294B3C;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 27px;
+    font-size: 29px;
     font-weight: 500;
     letter-spacing: -0.5px;
     overflow-wrap: anywhere;
@@ -1385,24 +2188,23 @@ h1, h2, h3, p {
 
 .savings-symbol {
     display: grid;
-    width: 39px;
-    height: 39px;
+    width: 42px;
+    height: 42px;
     flex-shrink: 0;
     place-items: center;
-    border: 1px solid #dfe5d6;
+    border: 1px solid #DCE3D5;
     border-radius: 12px;
-    background: #e6ebde;
-    color: #66815f;
-    font-size: 20px;
+    background: #E7EBDD;
+    color: #66815F;
+    font-size: 21px;
 }
 
-.savings-track, .goal-track {
+.savings-track,
+.goal-track {
     height: 6px;
 }
 
-.savings-fill {
-    background: #a394bc;
-}
+.savings-fill { background: #A394BC; }
 
 .goal-list {
     display: flex;
@@ -1415,24 +2217,26 @@ h1, h2, h3, p {
     align-items: flex-start;
     gap: 11px;
     padding: 15px 0;
-    border-bottom: 1px solid #efeee7;
+    border-bottom: 1px solid #EAE6DD;
     text-decoration: none;
 }
 
-.goal-item:last-child {
-    border-bottom: 0;
+.goal-item:last-child { border-bottom: 0; }
+
+.goal-item:hover .goal-heading strong {
+    color: #547653;
 }
 
 .goal-marker {
     display: grid;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
     place-items: center;
     border-radius: 10px;
-    background: #eee9f3;
-    color: #8979a1;
-    font-size: 15px;
+    background: #EBE5F3;
+    color: #8979A1;
+    font-size: 16px;
 }
 
 .goal-details {
@@ -1450,92 +2254,86 @@ h1, h2, h3, p {
 
 .goal-heading strong {
     color: #405143;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 650;
 }
 
 .goal-heading > span {
     flex-shrink: 0;
-    color: #8d7ca5;
-    font-size: 10px;
-    font-weight: 750;
+    color: #8D7CA5;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-.goal-caption {
-    margin-top: 7px;
-}
+.goal-caption { margin-top: 7px; }
 
-/* Bills */
+/* BILLS */
 
 .bill-summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 16px;
-    border: 1px solid #efe7d7;
-    border-radius: 12px;
-    background: #faf6ed;
+    padding: 17px;
+    border: 1px solid #EAE2D2;
+    border-radius: 14px;
+    background: #FAF6ED;
 }
 
 .bill-summary > div > p {
     margin: 6px 0 0;
-    color: #574b36;
+    color: #574B36;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 25px;
+    font-size: 27px;
     font-weight: 500;
 }
 
 .bill-count {
-    padding: 6px 9px;
+    padding: 7px 10px;
     border-radius: 8px;
-    background: #f0e7d5;
-    color: #8b754a;
-    font-size: 9px;
-    font-weight: 750;
+    background: #F0E7D5;
+    color: #8B754A;
+    font-size: 10px;
+    font-weight: 650;
 }
 
-.bill-list {
-    margin-top: 8px;
-}
+.bill-list { margin-top: 8px; }
 
 .bill-item {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 15px 0;
-    border-bottom: 1px solid #efeee7;
+    border-bottom: 1px solid #EAE6DD;
 }
 
-.bill-item:last-child {
-    border-bottom: 0;
-}
+.bill-item:last-child { border-bottom: 0; }
 
 .bill-date {
     display: flex;
-    width: 43px;
-    min-width: 43px;
-    min-height: 45px;
+    width: 45px;
+    min-width: 45px;
+    min-height: 47px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 2px;
-    border: 1px solid #eee8db;
-    border-radius: 10px;
-    background: #faf6ed;
+    border: 1px solid #EAE2D2;
+    border-radius: 11px;
+    background: #FAF6ED;
 }
 
 .bill-date span {
-    color: #9a8a68;
-    font-size: 8px;
-    font-weight: 750;
+    color: #9A8A68;
+    font-size: 10px;
+    font-weight: 650;
     text-transform: uppercase;
 }
 
 .bill-date strong {
-    color: #574b36;
-    font-size: 15px;
-    font-weight: 750;
+    color: #574B36;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .bill-details {
@@ -1548,40 +2346,38 @@ h1, h2, h3, p {
 
 .bill-details strong {
     color: #405143;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 650;
     overflow-wrap: anywhere;
 }
 
 .bill-details span {
-    color: #929488;
-    font-size: 9px;
+    color: #85877D;
+    font-size: 11px;
 }
 
 .bill-amount {
     flex-shrink: 0;
-    color: #554b39;
-    font-size: 11px;
-    font-weight: 750;
+    color: #554B39;
+    font-size: 12px;
+    font-weight: 700;
     overflow-wrap: anywhere;
 }
 
 .bill-reminder {
     margin-top: 14px;
-    border-color: #efe7d7;
-    background: #faf6ed;
+    border-color: #EAE2D2;
+    background: #FAF6ED;
 }
 
 .bill-reminder .reminder-icon {
-    background: #f0e7d5;
-    color: #8b754a;
+    background: #F0E7D5;
+    color: #8B754A;
 }
 
-/* Recent activity */
+/* RECENT ACTIVITY */
 
-.activity-panel {
-    margin-top: 0;
-}
+.activity-panel { margin-top: 0; }
 
 .table-wrap {
     width: 100%;
@@ -1596,30 +2392,29 @@ table {
 }
 
 thead th {
-    padding: 0 13px 12px;
-    border-bottom: 1px solid #eae9e1;
-    color: #9a9d91;
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 1px;
+    padding: 0 13px 13px;
+    border-bottom: 1px solid #EAE6DD;
+    color: #8B8C7D;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
-thead th:first-child, tbody td:first-child {
+thead th:first-child,
+tbody td:first-child {
     padding-left: 0;
 }
 
 tbody td {
-    padding: 14px 13px;
-    border-bottom: 1px solid #f0efe9;
+    padding: 15px 13px;
+    border-bottom: 1px solid #F0EEE8;
     color: #465449;
-    font-size: 10px;
+    font-size: 12px;
 }
 
-tbody tr:last-child td {
-    border-bottom: 0;
-}
+tbody tr:last-child td { border-bottom: 0; }
 
 .transaction-title {
     display: flex;
@@ -1630,67 +2425,60 @@ tbody tr:last-child td {
 
 .transaction-title strong {
     color: #405143;
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 650;
     overflow-wrap: anywhere;
 }
 
 .transaction-icon {
     display: grid;
-    width: 30px;
-    height: 30px;
+    width: 33px;
+    height: 33px;
     flex-shrink: 0;
     place-items: center;
-    border-radius: 9px;
-    font-size: 14px;
+    border-radius: 10px;
+    font-size: 15px;
 }
 
 .transaction-income {
-    background: #e8eee3;
+    background: #E7EBDD;
     color: #547653;
 }
 
 .transaction-expense {
-    background: #f7e8e1;
-    color: #ad7059;
+    background: #F5E4DD;
+    color: #A85F4C;
 }
 
 .category-tag {
     display: inline-block;
     max-width: 150px;
-    padding: 5px 7px;
-    border-radius: 6px;
-    background: #f2f1eb;
-    color: #777f73;
-    font-size: 9px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    background: #F2F1EB;
+    color: #777F73;
+    font-size: 10px;
     overflow-wrap: anywhere;
 }
 
 .muted-cell {
-    color: #929488;
+    color: #85877D;
     white-space: nowrap;
 }
 
 .type-label {
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 650;
 }
 
-.income-text {
-    color: #547653;
-}
+.income-text { color: #547653; }
+.expense-text { color: #A56854; }
 
-.expense-text {
-    color: #a56854;
-}
-
-.amount-column {
-    text-align: right;
-}
+.amount-column { text-align: right; }
 
 .amount-cell {
-    font-size: 10px;
-    font-weight: 750;
+    font-size: 12px;
+    font-weight: 700;
     white-space: nowrap;
 }
 
@@ -1698,23 +2486,23 @@ tbody tr:last-child td {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid #efeee7;
-    color: #929488;
-    font-size: 9px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #EAE6DD;
+    color: #85877D;
+    font-size: 11px;
     line-height: 1.6;
 }
 
 .activity-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: #8da183;
+    background: #8DA183;
 }
 
-/* Empty states */
+/* EMPTY STATES */
 
 .empty-state {
     display: flex;
@@ -1723,37 +2511,37 @@ tbody tr:last-child td {
     align-items: center;
     justify-content: center;
     padding: 25px 18px;
-    border: 1px dashed #dedfd4;
-    border-radius: 12px;
-    background: #faf9f5;
+    border: 1px dashed #D9DDD2;
+    border-radius: 14px;
+    background: #FAF9F5;
     text-align: center;
 }
 
 .empty-icon {
     display: grid;
-    width: 39px;
-    height: 39px;
+    width: 42px;
+    height: 42px;
     margin-bottom: 12px;
     place-items: center;
-    border-radius: 12px;
-    background: #e8eee2;
-    color: #557653;
-    font-size: 18px;
+    border-radius: 13px;
+    background: #E7EBDD;
+    color: #547653;
+    font-size: 19px;
 }
 
 .empty-state h3 {
     margin: 0;
-    color: #354638;
+    color: #294B3C;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 500;
 }
 
 .empty-state p {
     max-width: 320px;
     margin: 7px 0 15px;
-    color: #888b81;
-    font-size: 10px;
+    color: #777D73;
+    font-size: 12px;
     line-height: 1.8;
 }
 
@@ -1767,41 +2555,57 @@ tbody tr:last-child td {
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 10px;
-    margin-top: 21px;
-    color: #a0a194;
+    margin-top: 22px;
+    color: #8B8C7D;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 11px;
+    font-size: 12px;
     font-style: italic;
 }
 
-/* Responsive layout */
+/* RESPONSIVE */
 
 @media (max-width: 950px) {
     .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .content-grid {
+    .content-grid,
+    .analytics-grid {
         grid-template-columns: 1fr;
     }
 
     .balance-panel {
         grid-template-columns: minmax(0, 1.2fr) minmax(210px, 0.8fr);
     }
+
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .donut-layout {
+        flex-direction: column;
+    }
+
+    .donut-legend {
+        width: 100%;
+    }
+
+    .comparison-card {
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 600px) {
-    .finance-page {
-        padding: 23px 14px 34px;
-    }
-
     .page-header {
         align-items: flex-start;
         flex-direction: column;
         gap: 17px;
     }
 
-    .header-actions, .header-actions .primary-button {
+    .header-actions,
+    .header-actions .primary-button {
         width: 100%;
     }
 
@@ -1817,42 +2621,26 @@ tbody tr:last-child td {
         border-left: 0;
     }
 
-    .balance-side-icon {
-        display: none;
-    }
+    .balance-side-icon { display: none; }
 
-    .balance-side-label {
-        margin-top: 0;
-    }
+    .balance-side-label { margin-top: 0; }
 
-    .balance-links {
-        gap: 9px;
-    }
+    .balance-links { gap: 9px; }
 
-    .balance-links a {
-        font-size: 9px;
-    }
+    .balance-links a { font-size: 10px; }
 
-    .metric-grid {
-        gap: 10px;
-    }
+    .metric-grid { gap: 10px; }
 
-    .metric-card {
-        padding: 14px 12px;
-    }
+    .metric-card { padding: 15px 12px; }
 
     .metric-period {
-        font-size: 7px;
-        letter-spacing: 0.4px;
+        font-size: 9px;
+        letter-spacing: 0.04em;
     }
 
-    .metric-value {
-        font-size: 17px;
-    }
+    .metric-value { font-size: 17px; }
 
-    .panel {
-        padding: 18px 15px;
-    }
+    .panel { padding: 19px 16px; }
 
     .panel-heading {
         flex-direction: column;
@@ -1860,9 +2648,7 @@ tbody tr:last-child td {
         margin-bottom: 19px;
     }
 
-    .text-link {
-        margin-top: 0;
-    }
+    .text-link { margin-top: 0; }
 
     .category-amount {
         flex-direction: column;
@@ -1870,26 +2656,33 @@ tbody tr:last-child td {
         gap: 3px;
     }
 
-    .budget-total-caption, .goal-caption {
-        font-size: 8px;
-    }
-
-    .bill-item {
-        gap: 9px;
-    }
-
-    .bill-amount {
-        max-width: 100px;
+    .budget-total-caption,
+    .goal-caption {
         font-size: 10px;
     }
 
-    .page-footer {
+    .bill-item { gap: 9px; }
+
+    .bill-amount {
+        max-width: 100px;
+        font-size: 11px;
+    }
+
+    .comparison-card {
         flex-direction: column;
     }
+
+    .comparison-value {
+        align-items: flex-start;
+    }
+
+    .page-footer { flex-direction: column; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
