@@ -12,6 +12,7 @@ use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 
 use Inertia\Inertia;
 
@@ -36,6 +37,28 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class);
     Route::get('/calendar', [CalendarEventController::class, 'index'])
     ->name('calendar.index');
+
+    Route::post('/calendar-events', [CalendarEventController::class, 'store'])
+    ->name('calendar-events.store');
+
+    Route::put('/calendar-events/{calendar_event}', [CalendarEventController::class, 'update'])
+        ->name('calendar-events.update');
+
+    Route::patch('/calendar-events/{calendar_event}', [CalendarEventController::class, 'update'])
+        ->name('calendar-events.patch');
+
+    Route::delete('/calendar-events/{calendar_event}', [CalendarEventController::class, 'destroy'])
+        ->name('calendar-events.destroy');
+
+    Route::patch('/notifications/{id}/read', [
+        NotificationController::class,
+        'markAsRead',
+    ])->name('notifications.read');
+
+    Route::post('/notifications/read-all', [
+        NotificationController::class,
+        'markAllAsRead',
+    ])->name('notifications.read-all');
 });
 
 Route::middleware(['auth'])->prefix('finance')->name('finance.')->group(function () {

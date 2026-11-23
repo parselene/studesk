@@ -177,6 +177,7 @@ const allCalendarItems = computed(() => {
             ...event,
             id: `event-${event.id}`,
             source: 'event',
+            sourceId: event.id,
             event_type: event.event_type || 'personal',
             starts_at: event.starts_at,
             link: null,
@@ -383,7 +384,7 @@ function openCreateModal(dateKey = selectedDate.value) {
 function openEditModal(event) {
     resetForm()
 
-    form.eventId = event.id
+    form.eventId = event.sourceId
     form.title = event.title
     form.description = event.description || ''
     form.event_type = event.event_type || 'personal'
@@ -428,7 +429,7 @@ function saveEvent() {
 function deleteEvent(event) {
     if (!confirm(`Delete "${event.title}" from your calendar?`)) return
 
-    router.delete(`/calendar-events/${event.id}`, {
+    router.delete(`/calendar-events/${event.sourceId}`, {
         preserveScroll: true,
     })
 }
@@ -537,14 +538,21 @@ function eventClass(type) {
                         </span>
 
                         <div class="day-events">
-                            <span
+                            <button
                                 v-for="event in eventsForDay(day.key).slice(0, 2)"
                                 :key="event.id"
+                                type="button"
                                 class="day-event"
                                 :class="eventClass(event.event_type)"
+                                :title="event.source === 'event' ? 'Click to edit event' : event.title"
+                                @click.stop="
+                                    event.source === 'event'
+                                        ? openEditModal(event)
+                                        : selectedDate = day.key
+                                "
                             >
                                 {{ event.title }}
-                            </span>
+                            </button>
 
                             <span
                                 v-if="eventsForDay(day.key).length > 2"
@@ -1044,13 +1052,17 @@ h1 {
 
 .day-event {
     display: block;
+    width: 100%;
     padding: 4px 5px;
     overflow: hidden;
+    border: 0;
     border-radius: 4px;
     font-size: 9px;
     line-height: 1.3;
+    text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .academic {
